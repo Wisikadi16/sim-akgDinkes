@@ -201,6 +201,8 @@ export default function Admin() {
             set_semua_admin_cari(response.data)
             console.log(response)
         })
+	
+	set_null_data()
     }
 
     function x(){
@@ -211,13 +213,18 @@ export default function Admin() {
         if(modal_hapus){
             set_modal_hapus(false)
         }
-        
+	
+	set_null_data()
+    }
+
+    function set_null_data(){
         set_data({
             ...data,
-            ['id']:id,
-            ['nama']: response.data.name,
-            ['username']: response.data.username,
-            ['role']: response.data.role,
+            ['id']:'',
+            ['nama']: '',
+            ['username']: '',
+	    ['password']: '',
+            ['role']: '',
         })
     }
     console.log(edit);

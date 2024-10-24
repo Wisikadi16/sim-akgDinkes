@@ -1,21 +1,26 @@
 version: "3.8"
 
 services:
-    web:
+    laravel-app:
         build:
             context: .
             dockerfile: Dockerfile
+        container_name: sim-aha
+
+        restart: always
+        working_dir: /var/www/html
         volumes:
-            - bckp-php8.2:/var/www/html/bckp
+            - /var/project/sim-aha:/var/www/html
+            - /var/project/sim-aha/storage:/var/www/html/storage
+            - backup_data:/var/www/html/backup
         ports:
             - "9900:80"
         networks:
-            - app-network
-        restart: always
+            - sim-aha_network
 
 networks:
-    app-network:
-        driver: bridge
+    sim-aha_network:
+        external: true
 
 volumes:
-    bckp-php8.2:
+    backup_data:

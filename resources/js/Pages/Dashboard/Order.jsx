@@ -16,6 +16,10 @@ export default function Order({auth}) {
     const [semua_kecamatan, set_semua_kecamatan] = useState([]);
     const [semua_kelurahan, set_semua_kelurahan] = useState([]);
     const [kode_kecamatan, set_kode_kecamatan] = useState([]);
+    
+    const [tanggalDari, setTanggalDari] = useState('');
+    const [tanggalSampai, setTanggalSampai] = useState('');
+
     // const [semua_rs, set_semua_rs] = useState([]);
     
     const currentDate = new Date();
@@ -75,48 +79,74 @@ export default function Order({auth}) {
     const [c_cari, set_c_cari] = useState(false);
     const [val_cari, set_val_cari] = useState('');
 
-    console.log("lokasi")
-    console.log(window.location.origin)
+    // console.log("lokasi")
+    // console.log(window.location.origin)
+    
 
-    useEffect(()=>{
+    // useEffect(()=>{
+    //     const invtime = setInterval(() => {
+    //         if(!val_cari){
+    //             // axios.post(window.location.origin+'/ref_order',
+    //             // {
+    //             //     tanggal_dari:tanggalDari,
+    //             //     tanggal_sampai:tanggalSampai
+    //             // }).then(function (response){
+    //             //     set_semua_order(response.data)
+    //             //     set_semua_order_cari(response.data)
+    //             // })
+    //             console.log("timing")
+    //             refresh_all_data()
+                
+    //             // axios.post(window.location.origin+'/ref_tim_ambulan_order',
+    //             // {
+    //             // }).then(function (response){
+    //             //     set_semua_tim_ambulan(response.data)
+    //             //     // console.log(response)
+    //             // })
+                
+    //         }
+
+    //     }, 10000)
+
+    //     return () => {
+    //         clearInterval(invtime);
+    //     };
+
+    // // },[])
+    // },[val_cari])
+
+    useEffect(() => {
         const invtime = setInterval(() => {
-            if(!val_cari){
-                axios.post(window.location.origin+'/ref_order',
-                {
-                }).then(function (response){
-                    set_semua_order(response.data)
-                    set_semua_order_cari(response.data)
-                })
-                
-                axios.post(window.location.origin+'/ref_tim_ambulan_order',
-                {
-                }).then(function (response){
-                    set_semua_tim_ambulan(response.data)
-                    // console.log(response)
-                })
-                
+            if (!val_cari) {
+                if (tanggalDari && tanggalSampai) {
+                    refresh_all_data();
+                } 
+                // else {
+                //     console.log("Tanggal dari atau tanggal sampai belum diatur.");
+                // }
             }
-
-        }, 10000)
-
+        }, 10000);
+    
         return () => {
             clearInterval(invtime);
         };
+    
+    // },[]); // Uncomment if needed
+    }, [val_cari, tanggalDari, tanggalSampai]);
 
-    // },[])
-    },[val_cari])
+    
+    useEffect(() => {
+        if (tanggalDari && tanggalSampai) {
+            refresh_all_data(); // Call function without parameters
+        }
+    }, [tanggalDari, tanggalSampai]);
 
+    
     useEffect(()=>{
-        axios.post(window.location.origin+'/ref_order',
-        {
-            // tanggung_jawab:'Dokter',
-        }).then(function (response){
-            // set_semua_petugas(response.data)
-            set_semua_order(response.data)
-            set_semua_order_cari(response.data)
-            console.log("orderrr")
-            console.log(response)
-        })
+        setTanggalDari(`${year}-${month}-${day}`)
+        setTanggalSampai(`${year}-${month}-${day}`)
+
+        // refresh_all_data()
 
         axios.post(window.location.origin+'/ref_kecamatan',
         {
@@ -135,16 +165,16 @@ export default function Order({auth}) {
             // console.log(response)
         })
 
-        axios.post(window.location.origin+'/ref_tim_ambulan_order',
-        {
-            // tanggung_jawab:'Dokter',
-        }).then(function (response){
-            console.log(response)
-            // set_semua_petugas(response.data)
-            set_semua_tim_ambulan(response.data)
-            // set_semua_ambulan_cari(response.data)
-            // console.log(response)
-        })
+        // axios.post(window.location.origin+'/ref_tim_ambulan_order',
+        // {
+        //     // tanggung_jawab:'Dokter',
+        // }).then(function (response){
+        //     console.log(response)
+        //     // set_semua_petugas(response.data)
+        //     set_semua_tim_ambulan(response.data)
+        //     // set_semua_ambulan_cari(response.data)
+        //     // console.log(response)
+        // })
 
         // if(auth.role=="Operator"){
         //     axios.post(window.location.origin+'/ref_faskes',
@@ -177,30 +207,60 @@ export default function Order({auth}) {
         }
     }, [])
 
-    const oc_hapus = (id) =>{
+    const refresh_all_data = () => {
+    // function refresh_all_data(){
+        // axios.post(window.location.origin+'/ref_order',
+        //     {
+
+        //     }).then(function (response){
+        //         set_semua_order(response.data)
+        //         set_semua_order_cari(response.data)
+        //     })
+        console.log("refresh")
+        console.log(tanggalDari)
         axios.post(window.location.origin+'/ref_order',
-        {
-            id:id,
-        }).then(function (response){
-            set_data({
-                ...data,
-                ['id']:id,
-                ['cara_order']: response.data.cara_order,
-                ['no_penelepon']: response.data.no_penelepon,
-                ['nama_penelepon']:response.data.nama_penelepon,
-                ['kasus']: response.data.kasus,
-                ['kecamatan']: response.data.ref_kecamatan.kode_kecamatan,
-                ['kelurahan']: response.data.ref_kelurahan.kode_kelurahan,
-                ['nama_kecamatan']: response.data.ref_kecamatan.nama_kecamatan,
-                ['nama_kelurahan']: response.data.ref_kelurahan.nama_kelurahan,
-                ['alamat']:response.data.alamat,
-                ['latitude']:response.data.latitude,
-                ['longitude']:response.data.longitude,
-                ['tim_ambulan']:response.data.tim_ambulan.nama_tim,
-                ['waktu_order']:response.data.waktu_order,
+            {
+                tanggal_dari:tanggalDari,
+                tanggal_sampai:tanggalSampai
+            }).then(function (response){
+                set_semua_order(response.data)
+                set_semua_order_cari(response.data)
             })
-            // console.log(response)
-        })
+
+        axios.post(window.location.origin+'/ref_tim_ambulan_order',
+            {
+            }).then(function (response){
+                set_semua_tim_ambulan(response.data)
+            })
+    }
+
+    const oc_hapus = (id) =>{
+        // axios.post(window.location.origin+'/ref_order',
+        // {
+        //     id:id,
+        // }).then(function (response){
+        //     set_data({
+        //         ...data,
+        //         ['id']:id,
+        //         ['cara_order']: response.data.cara_order,
+        //         ['no_penelepon']: response.data.no_penelepon,
+        //         ['nama_penelepon']:response.data.nama_penelepon,
+        //         ['nama_pasien']:response.data.nama_pasien,
+        //         ['kasus']: response.data.kasus,
+        //         ['kecamatan']: response.data.ref_kecamatan.kode_kecamatan,
+        //         ['kelurahan']: response.data.ref_kelurahan.kode_kelurahan,
+        //         ['nama_kecamatan']: response.data.ref_kecamatan.nama_kecamatan,
+        //         ['nama_kelurahan']: response.data.ref_kelurahan.nama_kelurahan,
+        //         ['alamat']:response.data.alamat,
+        //         ['latitude']:response.data.latitude,
+        //         ['longitude']:response.data.longitude,
+        //         ['tim_ambulan']:response.data.tim_ambulan.nama_tim,
+        //         ['waktu_order']:response.data.waktu_order,
+        //     })
+        //     // console.log(response)
+        // })
+
+        get_id_ref_order(id)
 
         set_modal_hapus(true)
     }
@@ -223,23 +283,26 @@ export default function Order({auth}) {
             // console.log(response)
         })
 
-        set_data({
-            ...data,
-            ['id']:id,
-            ['cara_order']: response.data.cara_order,
-            ['no_penelepon']: response.data.no_penelepon,
-            ['nama_penelepon']:response.data.nama_penelepon,
-            ['kasus']: response.data.kasus,
-            ['kecamatan']: response.data.ref_kecamatan.kode_kecamatan,
-            ['kelurahan']: response.data.ref_kelurahan.kode_kelurahan,
-            ['nama_kecamatan']: response.data.ref_kecamatan.nama_kecamatan,
-            ['nama_kelurahan']: response.data.ref_kelurahan.nama_kelurahan,
-            ['alamat']:response.data.alamat,
-            ['latitude']:response.data.latitude,
-            ['longitude']:response.data.longitude,
-            ['tim_ambulan']:response.data.tim_ambulan.nama_tim,
-            ['waktu_order']:response.data.waktu_order,
-        })
+        get_id_ref_order(id)
+
+        // set_data({
+        //     ...data,
+        //     ['id']:id,
+        //     ['cara_order']: response.data.cara_order,
+        //     ['no_penelepon']: response.data.no_penelepon,
+        //     ['nama_penelepon']:response.data.nama_penelepon,
+        //     ['nama_pasien']:response.data.nama_pasien,
+        //     ['kasus']: response.data.kasus,
+        //     ['kecamatan']: response.data.ref_kecamatan.kode_kecamatan,
+        //     ['kelurahan']: response.data.ref_kelurahan.kode_kelurahan,
+        //     ['nama_kecamatan']: response.data.ref_kecamatan.nama_kecamatan,
+        //     ['nama_kelurahan']: response.data.ref_kelurahan.nama_kelurahan,
+        //     ['alamat']:response.data.alamat,
+        //     ['latitude']:response.data.latitude,
+        //     ['longitude']:response.data.longitude,
+        //     ['tim_ambulan']:response.data.tim_ambulan.nama_tim,
+        //     ['waktu_order']:response.data.waktu_order,
+        // })
     }
 
     const oc_edit = (id) =>{
@@ -253,24 +316,6 @@ export default function Order({auth}) {
     }
 
     const [page, set_page] = useState([0]);
-
-    function ubah_tgl(x){
-        let al = "";
-        if(x==null || x=="" || x=="null") {
-            al = "";
-        } else {
-            // var x = new Date(x).toISOString().replace("T"," ").substring(0, 19)
-            let tgl_full = x.split(" ")[0];
-            let jam = x.split(" ")[1];
-
-            let tgl = tgl_full.split("-")[2];
-            let bln = tgl_full.split("-")[1];
-            let thn = tgl_full.split("-")[0];
-
-            al = tgl + "-" + bln + "-" + thn + " " + jam;
-        }
-        return al;
-    }
 
     const [terima, set_terima] = useState(false);
 
@@ -834,14 +879,35 @@ export default function Order({auth}) {
     ];
 
     const cari = (e) => {
-        console.log("cariii")
-        console.log(e.target.value)
+        // console.log("cariii")
+        // console.log(e.target.value)
         set_val_cari(e.target.value);
         set_semua_order_cari(semua_order.filter((item) =>
             (item.nama_penelepon?.toLowerCase().includes(e.target.value) || false) ||
             (item.nama_pasien?.toLowerCase().includes(e.target.value) || false)
         ));
     }
+
+    const handleTanggalDariChange = (event) => {
+        setTanggalDari(event.target.value);
+    };
+
+    const handleTanggalSampaiChange = (event) => {
+        setTanggalSampai(event.target.value);
+    };
+
+    const cari_data = () => {
+        console.log('Tanggal Dari:', tanggalDari);
+        console.log('Tanggal Sampai:', tanggalSampai);
+        axios.post(window.location.origin+'/ref_order',
+            {
+                tanggal_dari:tanggalDari,
+                tanggal_sampai:tanggalSampai
+            }).then(function (response){
+                set_semua_order(response.data)
+                set_semua_order_cari(response.data)
+            })
+    };
 
     const [modal, set_modal] = useState(false);
 
@@ -1030,6 +1096,7 @@ export default function Order({auth}) {
                 ['cara_order']: response.data.cara_order,
                 ['no_penelepon']: response.data.no_penelepon,
                 ['nama_penelepon']:response.data.nama_penelepon,
+                ['nama_pasien']:response.data.nama_pasien,
                 ['kasus']: response.data.kasus,
                 ['kecamatan']: response.data.ref_kecamatan.kode_kecamatan,
                 ['kelurahan']: response.data.ref_kelurahan.kode_kelurahan,
@@ -1045,22 +1112,6 @@ export default function Order({auth}) {
             })
             // console.log(response)
         })
-    }
-
-    function refresh_all_data(){
-        axios.post(window.location.origin+'/ref_order',
-            {
-
-            }).then(function (response){
-                set_semua_order(response.data)
-                set_semua_order_cari(response.data)
-            })
-
-        axios.post(window.location.origin+'/ref_tim_ambulan_order',
-            {
-            }).then(function (response){
-                set_semua_tim_ambulan(response.data)
-            })
     }
 
     function set_null_data(){
@@ -1101,14 +1152,14 @@ export default function Order({auth}) {
         })
     }
 
-    console.log("auth role")
-    console.log(auth.role)
+    // console.log("auth role")
+    // console.log(auth.role)
     // console.log(koorku)
     // console.log(semua_kecamatan)
 
     // console.log(semua_kelurahan)
     // console.log(edit);
-    console.log(data)
+    // console.log(data)
     console.log(semua_order)
     console.log(semua_tim_ambulan)
     // console.log(semua_tim_ambulan);
@@ -1191,12 +1242,36 @@ export default function Order({auth}) {
                             {val.text}
                         </div>
                     ))}
-                    {/* <div className="text-sm rounded-full border bg-[#37ffde] px-1 py-1 flex items-center justify-center">
-                        Ajukan Rujuk
-                    </div> */}
-                    {/* <div className="text-sm rounded-full border bg-[#4138ca] px-1 py-1 flex items-center justify-center text-white">
-                        Sudah Dirujuk
-                    </div> */}
+                </div>
+            </div>
+            <div className="flex mt-3">
+                <div className="mr-3">Waktu Order Tanggal Dari</div>
+                <div>
+                    <input
+                        type="date"
+                        id="tanggal_dari"
+                        className="pb-0 pt-0 mr-3"
+                        value={tanggalDari}
+                        onChange={handleTanggalDariChange}
+                    />
+                </div>
+                <div className="mr-3">Tanggal Sampai</div>
+                <div>
+                    <input
+                        type="date"
+                        id="tanggal_sampai"
+                        className="pb-0 pt-0 mr-3"
+                        value={tanggalSampai}
+                        onChange={handleTanggalSampaiChange}
+                    />
+                </div>
+                <div>
+                    <button
+                        onClick={cari_data} 
+                        type="button"
+                        className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
+                            Cari
+                    </button>
                 </div>
             </div>
         </div>

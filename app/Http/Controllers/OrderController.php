@@ -17,6 +17,7 @@ use App\Models\Catatan_Medis;
 use App\Models\Surat_Persetujuan_Tindakan_Medis;
 use App\Models\Surat_Keterangan_Kematian;
 use DateTime;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -38,21 +39,74 @@ class OrderController extends Controller
     public function ref_order(Request $request)
     {
         if($request->id==null){
+            if($request->tanggal_dari!=null && $request->tanggal_sampai!=null){
+                $tanggalDari = Carbon::createFromFormat('Y-m-d', $request->tanggal_dari)->format('d/m/Y') . ' 00:00';
+                $tanggalSampai = Carbon::createFromFormat('Y-m-d', $request->tanggal_sampai)->format('d/m/Y') . ' 23:59';
+            }
+            
             if(Auth::check() && Auth::user()->role!="admin"){
                 if(Auth::user()->role=="Tim Ambulan"){
                     $id_ambulan = Tim_Ambulan::where('id_admin', Auth::user()->id)->first();
                     // $data = Order::with('ref_kecamatan')->with('ref_kelurahan')->with('user')->with('tim_ambulan')->where('id_tim_ambulan', Auth::user()->id)->orderBy('id', 'DESC')->get();
-                    $data = Order::with('ref_kecamatan')->with('ref_kelurahan')->with('user')->with('tim_ambulan')->where('id_tim_ambulan', $id_ambulan->id)->orderBy('id', 'DESC')->get();
+                    // $data = Order::with(['ref_kecamatan', 'ref_kelurahan', 'user', 'tim_ambulan'])
+                    //     ->where('id_tim_ambulan', $id_ambulan->id)
+                    //     ->orderBy('id', 'DESC')
+                    //     ->get();
+                    $query = Order::with(['ref_kecamatan', 'ref_kelurahan', 'user', 'tim_ambulan'])
+                        ->where('id_tim_ambulan', $id_ambulan->id)
+                        ->orderBy('id', 'DESC');
+                        // ->get();
+                    
+                    if (isset($tanggalDari) && isset($tanggalSampai)) {
+                        // $query->whereBetween('waktu_order', [$tanggalDari, $tanggalSampai]);
+                        $query->where('waktu_order', '>=', $tanggalDari)
+                            ->where('waktu_order', '<=', $tanggalSampai);
+                    }
+
+                    $data = $query->get();
                     // dd($data);
                 }
                 if(Auth::user()->role=="Operator"){
-                    $data = Order::with('ref_kecamatan')->with('ref_kelurahan')->with('user')->with('tim_ambulan')->where('id_petugas_user', Auth::user()->id)->orderBy('id', 'DESC')->get();
+                    // $data = Order::with(['ref_kecamatan', 'ref_kelurahan', 'user', 'tim_ambulan'])
+                    // ->where('id_petugas_user', Auth::user()->id)
+                    // ->orderBy('id', 'DESC')->get();
+
+                    $query = Order::with(['ref_kecamatan', 'ref_kelurahan', 'user', 'tim_ambulan'])
+                    ->where('id_petugas_user', Auth::user()->id)
+                    ->orderBy('id', 'DESC');
+
+                    if (isset($tanggalDari) && isset($tanggalSampai)) {
+                        // $query->whereBetween('waktu_order', [$tanggalDari, $tanggalSampai]);
+                        $query->where('waktu_order', '>=', $tanggalDari)
+                            ->where('waktu_order', '<=', $tanggalSampai);
+                    }
+
+                    $data = $query->get();
                 }
                 // $data = Order::with('ref_kecamatan')->with('ref_kelurahan')->with('user')->with('tim_ambulan')->orderBy('id', 'DESC')->get();
 
             }
             else{
-                $data = Order::with('ref_kecamatan')->with('ref_kelurahan')->with('user')->with('tim_ambulan')->orderBy('id', 'DESC')->get();
+                $query = Order::with(['ref_kecamatan', 'ref_kelurahan', 'user', 'tim_ambulan'])
+                    ->orderBy('id', 'DESC');
+
+                // if (isset($tanggalDari) && isset($tanggalSampai)) {
+                //     $query->whereDate('waktu_order', '>=', $tanggalDari." 00:00")
+                //         ->whereDate('waktu_order', '<=', $tanggalSampai." 23:59");
+                // }
+                if (isset($tanggalDari) && isset($tanggalSampai)) {
+                    // $query->whereBetween('waktu_order', [$tanggalDari, $tanggalSampai]);
+                    $query->where('waktu_order', '>=', $tanggalDari)
+                        ->where('waktu_order', '<=', $tanggalSampai);
+                }
+                // dd($tanggalDari. "00:00");
+
+                $data = $query->get();
+                // $data = Order::with(['ref_kecamatan', 'ref_kelurahan', 'user', 'tim_ambulan'])
+                // ->whereDate('waktu_order', '>=', $tanggalDari)
+                // ->whereDate('waktu_order', '<=', $tanggalSampai)
+                // ->orderBy('id', 'DESC')
+                // ->get();
             }
         }
         else{

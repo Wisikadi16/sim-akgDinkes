@@ -24,6 +24,9 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN npm install
 RUN npm run build
 
+RUN composer install
+RUN composer update
+
 # Ensure the storage and bootstrap directories are writable
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

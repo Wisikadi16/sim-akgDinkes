@@ -40,8 +40,10 @@ class OrderController extends Controller
     {
         if($request->id==null){
             if($request->tanggal_dari!=null && $request->tanggal_sampai!=null){
-                $tanggalDari = Carbon::createFromFormat('Y-m-d', $request->tanggal_dari)->format('d/m/Y') . ' 00:00';
-                $tanggalSampai = Carbon::createFromFormat('Y-m-d', $request->tanggal_sampai)->format('d/m/Y') . ' 23:59';
+                // $tanggalDari = Carbon::createFromFormat('Y-m-d', $request->tanggal_dari)->format('d/m/Y') . ' 00:00';
+                // $tanggalSampai = Carbon::createFromFormat('Y-m-d', $request->tanggal_sampai)->format('d/m/Y') . ' 23:59';
+                $tanggalDari = Carbon::createFromFormat('Y-m-d', $request->tanggal_dari)->startOfDay()->format('Y-m-d H:i');
+                $tanggalSampai = Carbon::createFromFormat('Y-m-d', $request->tanggal_sampai)->endOfDay()->format('Y-m-d H:i');
             }
             
             if(Auth::check() && Auth::user()->role!="admin"){
@@ -59,8 +61,10 @@ class OrderController extends Controller
                     
                     if (isset($tanggalDari) && isset($tanggalSampai)) {
                         // $query->whereBetween('waktu_order', [$tanggalDari, $tanggalSampai]);
-                        $query->where('waktu_order', '>=', $tanggalDari)
-                            ->where('waktu_order', '<=', $tanggalSampai);
+                        // $query->where('waktu_order', '>=', $tanggalDari)
+                        //     ->where('waktu_order', '<=', $tanggalSampai);
+                        $query->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') >= ?", [$tanggalDari])
+                            ->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') <= ?", [$tanggalSampai]);
                     }
 
                     $data = $query->get();
@@ -77,8 +81,10 @@ class OrderController extends Controller
 
                     if (isset($tanggalDari) && isset($tanggalSampai)) {
                         // $query->whereBetween('waktu_order', [$tanggalDari, $tanggalSampai]);
-                        $query->where('waktu_order', '>=', $tanggalDari)
-                            ->where('waktu_order', '<=', $tanggalSampai);
+                        // $query->where('waktu_order', '>=', $tanggalDari)
+                        //     ->where('waktu_order', '<=', $tanggalSampai);
+                        $query->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') >= ?", [$tanggalDari])
+                            ->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') <= ?", [$tanggalSampai]);
                     }
 
                     $data = $query->get();
@@ -96,8 +102,10 @@ class OrderController extends Controller
                 // }
                 if (isset($tanggalDari) && isset($tanggalSampai)) {
                     // $query->whereBetween('waktu_order', [$tanggalDari, $tanggalSampai]);
-                    $query->where('waktu_order', '>=', $tanggalDari)
-                        ->where('waktu_order', '<=', $tanggalSampai);
+                    // $query->where('waktu_order', '>=', $tanggalDari)
+                    //     ->where('waktu_order', '<=', $tanggalSampai);
+                    $query->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') >= ?", [$tanggalDari])
+                        ->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') <= ?", [$tanggalSampai]);
                 }
                 // dd($tanggalDari. "00:00");
 

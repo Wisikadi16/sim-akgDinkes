@@ -21,11 +21,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+RUN composer install
+RUN composer update
+
 RUN npm install
 RUN npm run build
 
-RUN composer install
-RUN composer update
 
 # Ensure the storage and bootstrap directories are writable
 

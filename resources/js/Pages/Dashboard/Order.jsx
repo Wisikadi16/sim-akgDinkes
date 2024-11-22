@@ -120,6 +120,14 @@ export default function Order({auth}) {
             if (!val_cari) {
                 if (tanggalDari && tanggalSampai) {
                     refresh_all_data();
+                    // console.log("geolocation")
+                    // console.log(koorku)
+                    if(auth.role=="Tim Ambulan"){
+                        // console.log("tim ambulan posisi")
+                        if ("geolocation" in navigator) {
+                            kirim_lokasi()
+                        }
+                    }
                 } 
                 // else {
                 //     console.log("Tanggal dari atau tanggal sampai belum diatur.");
@@ -137,7 +145,7 @@ export default function Order({auth}) {
     
     useEffect(() => {
         if (tanggalDari && tanggalSampai) {
-            refresh_all_data(); // Call function without parameters
+            refresh_all_data();
         }
     }, [tanggalDari, tanggalSampai]);
 
@@ -187,23 +195,28 @@ export default function Order({auth}) {
         //     })
         // }
         if(auth.role=="Tim Ambulan"){
-            navigator.geolocation.getCurrentPosition(position=>{
-                const {latitude, longitude} = position.coords;
-    
-                set_koorku({
-                    ...koorku,
-                    ["lat"]: latitude,
-                    ["lng"]: longitude,
-                })
+            // console.log("tim ambulan posisi")
+            if ("geolocation" in navigator) {
+                // console.log("geolocation")
+                // console.log(koorku)
+                // navigator.geolocation.getCurrentPosition(position=>{
+                //     const {latitude, longitude} = position.coords;
+        
+                //     set_koorku({
+                //         ...koorku,
+                //         ["lat"]: latitude,
+                //         ["lng"]: longitude,
+                //     })
 
-                kirim_lokasi(latitude, longitude)
+                    kirim_lokasi()
 
-                console.log("tim ambulan role")
-                console.log("lat"+latitude+" long"+longitude)
-                ,(error) => console.warn(error.message),
-            { enableHighAccuracy: true}
-           // enableHighAccuracy=true
-            })
+            //         console.log("tim ambulan role")
+            //         console.log("lat"+latitude+" long"+longitude)
+            //         ,(error) => console.warn(error.message),
+            //     { enableHighAccuracy: true}
+            // // enableHighAccuracy=true
+            //     })
+            }
         }
     }, [])
 
@@ -217,7 +230,7 @@ export default function Order({auth}) {
         //         set_semua_order_cari(response.data)
         //     })
         console.log("refresh")
-        console.log(tanggalDari)
+        // console.log(tanggalDari)
         axios.post(window.location.origin+'/ref_order',
             {
                 tanggal_dari:tanggalDari,
@@ -235,31 +248,6 @@ export default function Order({auth}) {
     }
 
     const oc_hapus = (id) =>{
-        // axios.post(window.location.origin+'/ref_order',
-        // {
-        //     id:id,
-        // }).then(function (response){
-        //     set_data({
-        //         ...data,
-        //         ['id']:id,
-        //         ['cara_order']: response.data.cara_order,
-        //         ['no_penelepon']: response.data.no_penelepon,
-        //         ['nama_penelepon']:response.data.nama_penelepon,
-        //         ['nama_pasien']:response.data.nama_pasien,
-        //         ['kasus']: response.data.kasus,
-        //         ['kecamatan']: response.data.ref_kecamatan.kode_kecamatan,
-        //         ['kelurahan']: response.data.ref_kelurahan.kode_kelurahan,
-        //         ['nama_kecamatan']: response.data.ref_kecamatan.nama_kecamatan,
-        //         ['nama_kelurahan']: response.data.ref_kelurahan.nama_kelurahan,
-        //         ['alamat']:response.data.alamat,
-        //         ['latitude']:response.data.latitude,
-        //         ['longitude']:response.data.longitude,
-        //         ['tim_ambulan']:response.data.tim_ambulan.nama_tim,
-        //         ['waktu_order']:response.data.waktu_order,
-        //     })
-        //     // console.log(response)
-        // })
-
         get_id_ref_order(id)
 
         set_modal_hapus(true)
@@ -1139,17 +1127,35 @@ export default function Order({auth}) {
         })
     }
 
-    function kirim_lokasi(latitude, longitude){
-        axios.post(window.location.origin+'/tim_ambulan/kirim_lokasi',
-        {
-            latitude:latitude,
-            longitude:longitude,
-        }).then(function (response){
-            console.log("kirim lokasi")
-            console.log(response)
-            // set_semua_order(response.data)
-            // set_semua_order_cari(response.data)
+    function kirim_lokasi(){
+        navigator.geolocation.getCurrentPosition(position=>{
+            const {latitude, longitude} = position.coords;
+            
+            axios.post(window.location.origin+'/tim_ambulan/kirim_lokasi',
+            {
+                latitude:latitude,
+                longitude:longitude,
+            }).then(function (response){
+                set_koorku({
+                    ...koorku,
+                    ["lat"]: latitude,
+                    ["lng"]: longitude,
+                })
+                console.log("kirim lokasi")
+                console.log("lat"+latitude+" long"+longitude)
+            
+                // console.log(response)
+                // set_semua_order(response.data)
+                // set_semua_order_cari(response.data)
+            })
+            // kirim_lokasi(latitude, longitude)
+
+            // console.log("tim ambulan role")
+            ,(error) => console.warn(error.message),
+        { enableHighAccuracy: true}
+    // enableHighAccuracy=true
         })
+        
     }
 
     // console.log("auth role")
@@ -1161,7 +1167,7 @@ export default function Order({auth}) {
     // console.log(edit);
     // console.log(data)
     console.log(semua_order)
-    console.log(semua_tim_ambulan)
+    // console.log(semua_tim_ambulan)
     // console.log(semua_tim_ambulan);
 
     function set_icon(url){

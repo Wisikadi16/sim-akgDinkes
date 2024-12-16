@@ -319,10 +319,12 @@ class FormUmumController extends Controller
 
             // //petugas ambulance hebat
             'nama_ttd_petugas_ambulance_hebat'=> $request->nama_ttd_petugas_ambulance_hebat,
+            'ttd_petugas_ambulance_hebat'=> $request->ttd_petugas_ambulance_hebat,
 
             'keluarga_pasien_petugas_rs'=> $request->keluarga_pasien_petugas_rs,
             //
             'nama_ttd_keluarga_pasien_petugas_rs'=> $request->nama_ttd_keluarga_pasien_petugas_rs,
+            'ttd_keluarga_pasien_petugas_rs'=> $request->ttd_keluarga_pasien_petugas_rs,
         ]);
 
         // return Redirect::route('form_umum.edit',$request->id_form);

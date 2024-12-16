@@ -302,9 +302,10 @@ export default function Form_Umum({auth, id}) {
                 )
                 ref_ttd_petugas_ambulance.current.fromDataURL(response.data.ttd_petugas_ambulance_hebat);
 
-                set_data_keluarga_pasien_petugas_rs(
-                    ...get_data_keluarga_pasien_petugas_rs, response.data.keluarga_pasien_petugas_rs
-                )
+                // set_data_keluarga_pasien_petugas_rs(
+                //     ...get_data_keluarga_pasien_petugas_rs, response.data.keluarga_pasien_petugas_rs
+                // )
+                set_data_keluarga_pasien_petugas_rs(response.data.keluarga_pasien_petugas_rs)
 
                 console.log("keluarga pasien petugas rs")
                 console.log(get_data_keluarga_pasien_petugas_rs)
@@ -1079,7 +1080,7 @@ export default function Form_Umum({auth, id}) {
         
                     //petugas ambulance hebat
                     nama_ttd_petugas_ambulance_hebat:get_data_nama_ttd_petugas_ambulance_hebat,
-                    ttd_petugas_ambulance:get_ttd_petugas_ambulance,
+                    ttd_petugas_ambulance_hebat:get_ttd_petugas_ambulance,
 
                     //nama keluarga pasien petugas rs
                     nama_ttd_keluarga_pasien_petugas_rs:get_data_nama_ttd_keluarga_pasien_petugas_rs,

@@ -156,25 +156,25 @@ export default function Form_Umum({auth, id}) {
                 //     //   console.error("Invalid data format. Expected an array.");
                 //     // }
                 //   }
-                if (response.data.rk_riwayat_penyakit_dahulu !== null) {
-                set_data_surv_prim_riwayat_penyakit_dahulu(
-                    [
-                    ...get_data_surv_prim_riwayat_penyakit_dahulu,
-                    ...JSON.parse(response.data.rk_riwayat_penyakit_dahulu)
-                    ]
-                );
-                const valuesNotInArray = JSON.parse(response.data.rk_riwayat_penyakit_dahulu).filter(
-                    (val) => !ar_riwayat_penyakit_dahulu.some((arVal) => val === arVal.value)
-                    );
-                    if(valuesNotInArray!=null){
-                    set_data_surv_prim_riwayat_penyakit_dahulu_lainnya(
+                if (response.data.rk_riwayat_penyakit_dahulu != null && response.data.rk_riwayat_penyakit_dahulu != "null") {
+                    set_data_surv_prim_riwayat_penyakit_dahulu(
                         [
-                        ...get_data_surv_prim_riwayat_penyakit_dahulu_lainnya,
-                        ...valuesNotInArray
+                        ...get_data_surv_prim_riwayat_penyakit_dahulu,
+                        ...JSON.parse(response.data.rk_riwayat_penyakit_dahulu)
                         ]
                     );
-                    // set_show_data_surv_prim_riwayat_penyakit_dahulu_lainnya(true)
-                    }
+                    const valuesNotInArray = JSON.parse(response.data.rk_riwayat_penyakit_dahulu).filter(
+                        (val) => !ar_riwayat_penyakit_dahulu.some((arVal) => val === arVal.value)
+                        );
+                        if(valuesNotInArray!=null){
+                        set_data_surv_prim_riwayat_penyakit_dahulu_lainnya(
+                            [
+                            ...get_data_surv_prim_riwayat_penyakit_dahulu_lainnya,
+                            ...valuesNotInArray
+                            ]
+                        );
+                        // set_show_data_surv_prim_riwayat_penyakit_dahulu_lainnya(true)
+                        }
                 }
                 //   set_data_surv_prim_riwayat_penyakit_dahulu_lainnya
                 
@@ -227,21 +227,37 @@ export default function Form_Umum({auth, id}) {
                 //     ...get_data_diagnosis_medis, JSON.parse(response.data.diagnosis_medis)
                 // )
                 var parse_diagnosis_medis;
-                if(response.data.diagnosis_medis!=null){
-                    var parse_diagnosis_medis=JSON.parse(response.data.diagnosis_medis);
+                // if(response.data.diagnosis_medis!=null){
+                //     consok
+                //     var parse_diagnosis_medis=JSON.parse(response.data.diagnosis_medis);
                     
-                    set_kode_diagnosis_medis(
-                        ...kode_diagnosis_medis, parse_diagnosis_medis
-                    )
-                }
-                if(parse_diagnosis_medis!=null){
-                    Object.keys(parse_diagnosis_medis).forEach((item) => {
-                        const s_kode = get_data_icd_10.find((val) => val.kode_icd == parse_diagnosis_medis[item])?.diagnosis;
+                //     set_kode_diagnosis_medis(
+                //         ...kode_diagnosis_medis, parse_diagnosis_medis
+                //     )
+                // }
+                // if(parse_diagnosis_medis!=null){
+                //     Object.keys(parse_diagnosis_medis).forEach((item) => {
+                //         const s_kode = get_data_icd_10.find((val) => val.kode_icd == parse_diagnosis_medis[item])?.diagnosis;
                         
-                        set_data_diagnosis_medis((prevData) => [...prevData, s_kode].filter(Boolean));
-                    })
-                }
+                //         set_data_diagnosis_medis((prevData) => [...prevData, s_kode].filter(Boolean));
+                //     })
+                // }
 
+                if (response.data.diagnosis_medis) {
+                    const parsedDiagnosisMedis = JSON.parse(response.data.diagnosis_medis);
+                
+                    console.log("parsed diagnosa")
+                    console.log(parsedDiagnosisMedis)
+                    // Update kode_diagnosis_medis state
+                    set_kode_diagnosis_medis((prevState) => [...prevState, ...parsedDiagnosisMedis]);
+                
+                    // Update data_diagnosis_medis state
+                    const updatedDiagnosisMedis = parsedDiagnosisMedis
+                        .map((item) => get_data_icd_10.find((val) => val.kode_icd === item)?.diagnosis)
+                        .filter(Boolean);
+                
+                    set_data_diagnosis_medis((prevData) => [...prevData, ...updatedDiagnosisMedis]);
+                }
 
                 set_terapi_tindakan_konsul_dr(
                     ...get_terapi_tindakan_konsul_dr, response.data.terapi_tindakan_konsul_dr
@@ -281,21 +297,34 @@ export default function Form_Umum({auth, id}) {
                     ...get_data_nama_ttd_petugas_ambulance_hebat, response.data.nama_ttd_petugas_ambulance_hebat
                 )
 
+                set_ttd_petugas_ambulance(
+                    ...get_ttd_petugas_ambulance, response.data.ttd_petugas_ambulance_hebat
+                )
+                ref_ttd_petugas_ambulance.current.fromDataURL(response.data.ttd_petugas_ambulance_hebat);
+
                 set_data_keluarga_pasien_petugas_rs(
                     ...get_data_keluarga_pasien_petugas_rs, response.data.keluarga_pasien_petugas_rs
                 )
-                // console.log(get_data_keluarga_pasien_petugas_rs)
+
+                console.log("keluarga pasien petugas rs")
+                console.log(get_data_keluarga_pasien_petugas_rs)
 
                 set_data_nama_ttd_keluarga_pasien_petugas_rs(
                     ...get_data_nama_ttd_keluarga_pasien_petugas_rs, response.data.nama_ttd_keluarga_pasien_petugas_rs
                 )
+
+                set_ttd_keluarga_pasien_petugas_rs(
+                    ...get_ttd_keluarga_pasien_petugas_rs, response.data.ttd_keluarga_pasien_petugas_rs
+                )
+                ref_ttd_keluarga_pasien_petugas_rs.current.fromDataURL(response.data.ttd_keluarga_pasien_petugas_rs);
+
             })
         }
-        else{
-            set_data_keluarga_pasien_petugas_rs(
-                ...get_data_keluarga_pasien_petugas_rs, "Petugas RS"
-            )
-        }
+        // else{
+        //     set_data_keluarga_pasien_petugas_rs(
+        //         ...get_data_keluarga_pasien_petugas_rs, "Petugas RS"
+        //     )
+        // }
         
 
     }, [get_data_icd_10?.length, get_data_icd_9?.length, rs_rujukan?.length])
@@ -844,7 +873,8 @@ export default function Form_Umum({auth, id}) {
     // console.log(get_data_rumah_sakit_rujukan)
     // console.log(get_jam_rs_rujukan)
     
-    const [get_data_keluarga_pasien_petugas_rs, set_data_keluarga_pasien_petugas_rs] = useState('')
+    // const [get_data_keluarga_pasien_petugas_rs, set_data_keluarga_pasien_petugas_rs] = useState('')
+    const [get_data_keluarga_pasien_petugas_rs, set_data_keluarga_pasien_petugas_rs] = useState("Petugas RS")
     // const [get_data_keluarga_pasien_petugas_rs, set_data_keluarga_pasien_petugas_rs] = useState('')
     
     const [get_data_nama_ttd_petugas_ambulance_hebat, set_data_nama_ttd_petugas_ambulance_hebat] = useState('')
@@ -880,8 +910,11 @@ export default function Form_Umum({auth, id}) {
         // ref_ttd_petugas_ambulance.current.fromDataURL(get_ttd_petugas_ambulance)
     }
     
-    // console.log("oe_ttd2")
-    // console.log(ref_ttd_petugas_ambulance)
+    console.log("oe_ttd2_petugas_ambulance")
+    console.log(get_ttd_petugas_ambulance)
+    
+    console.log("oe_ttd2_keluarga")
+    console.log(get_ttd_keluarga_pasien_petugas_rs)
     
     // console.log(get_ttd_petugas_ambulance)
 
@@ -1046,9 +1079,13 @@ export default function Form_Umum({auth, id}) {
         
                     //petugas ambulance hebat
                     nama_ttd_petugas_ambulance_hebat:get_data_nama_ttd_petugas_ambulance_hebat,
-        
+                    ttd_petugas_ambulance:get_ttd_petugas_ambulance,
+
                     //nama keluarga pasien petugas rs
                     nama_ttd_keluarga_pasien_petugas_rs:get_data_nama_ttd_keluarga_pasien_petugas_rs,
+                    ttd_keluarga_pasien_petugas_rs:get_ttd_keluarga_pasien_petugas_rs
+                
+
                 }).then(function (response){
                     toast.success(response.data, {
                         position: toast.POSITION.TOP_RIGHT,
@@ -1181,10 +1218,12 @@ export default function Form_Umum({auth, id}) {
         
                     //petugas ambulance hebat
                     nama_ttd_petugas_ambulance_hebat:get_data_nama_ttd_petugas_ambulance_hebat,
-        
+                    ttd_petugas_ambulance_hebat:get_ttd_petugas_ambulance,
+
                     //nama keluarga pasien petugas rs
                     nama_ttd_keluarga_pasien_petugas_rs:get_data_nama_ttd_keluarga_pasien_petugas_rs,
-        
+                    ttd_keluarga_pasien_petugas_rs:get_ttd_keluarga_pasien_petugas_rs,
+
                 }).then(function (response){
                     toast.success(response.data, {
                         position: toast.POSITION.TOP_RIGHT,
@@ -1228,6 +1267,9 @@ export default function Form_Umum({auth, id}) {
         },
         onAfterPrint:()=>setIsPrinting(false)
     })
+
+    console.log("keluraga petugas rs")
+    console.log(get_data_keluarga_pasien_petugas_rs)
 
     
     return (

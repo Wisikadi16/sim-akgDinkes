@@ -122,12 +122,12 @@ export default function Identitas_Tim(props) {
                 
                 set_data(prev_data => ({
                     ...prev_data,
-                    id: response.data.id_tim_ambulan,
-                    tim: response.data[jenis].ita_tim,
-                    dokter: response.data[jenis].ita_dokter,
-                    perawat: response.data[jenis].ita_perawat,
-                    bidan: response.data[jenis].ita_bidan,
-                    driver: response.data[jenis].ita_driver,
+                    id: response.data?.id_tim_ambulan,
+                    tim: response.data[jenis]?.ita_tim,
+                    dokter: response.data[jenis]?.ita_dokter,
+                    perawat: response.data[jenis]?.ita_perawat,
+                    bidan: response.data[jenis]?.ita_bidan,
+                    driver: response.data[jenis]?.ita_driver,
                 }));
             })
         }    
@@ -157,7 +157,12 @@ export default function Identitas_Tim(props) {
         
     }
 
-    props.onSubmit(get_data);
+    useEffect(() => {
+        if (props.onSubmit) {
+            props.onSubmit(get_data);
+        }
+    }, [get_data]);
+
     console.log("get data tim ambulan")
     console.log(get_data)
 
@@ -169,7 +174,7 @@ export default function Identitas_Tim(props) {
             <div className="flex col-span-3">:
                 {
                     props.isPrinting == false &&
-                    <div className="">
+                    <div >
                     {/* <input className="w-full text-xs p-0" 
                         type = "text"
                         name = "tim"
@@ -199,7 +204,7 @@ export default function Identitas_Tim(props) {
             <div className="flex col-span-3">:
                 {
                     props.isPrinting == false &&
-                    <div className="">
+                    <div >
                     {/* <input className="w-full text-xs p-0" 
                         type = "text"
                         name = "dokter"
@@ -223,11 +228,11 @@ export default function Identitas_Tim(props) {
                     <div>{get_data.dokter}</div>
                 }
             </div>
-            <div className="flex col-span-2">Perawat</div>
+            <div className="flex col-span-2">Nakes 1</div>
             <div className="flex col-span-3">:
                 {
                     props.isPrinting == false &&
-                    <div className="">
+                    <div >
                     {/* <input className="w-full text-xs p-0" 
                         type = "text"
                         name = "perawat"
@@ -252,11 +257,11 @@ export default function Identitas_Tim(props) {
                     <div>{get_data.perawat}</div>
                 }
             </div>
-            <div className="flex col-span-2">Bidan</div>
+            <div className="flex col-span-2">Nakes 2</div>
             <div className="flex col-span-3">:
                 {
                     props.isPrinting == false &&
-                    <div className="">
+                    <div >
                     <input className="w-full text-xxs md:text-sm sm:text-xs p-0" 
                         type = "text"
                         name = "bidan"
@@ -279,7 +284,7 @@ export default function Identitas_Tim(props) {
                 :
                 {
                     props.isPrinting == false &&
-                    <div className="">
+                    <div >
                     <input className="w-full text-xxs md:text-sm sm:text-xs p-0" 
                         type = "text"
                         name = "driver"

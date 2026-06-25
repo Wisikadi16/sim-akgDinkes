@@ -4,6 +4,8 @@ import axios from 'axios';
 import HeaderFormSurat from "@/Components/Headers/HeaderFormSurat";
 import SignatureCanvas from 'react-signature-canvas';
 import {useReactToPrint} from 'react-to-print';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 export default function Form_Surat_Persetujuan_Tindakan_Medis(props) {
@@ -401,11 +403,12 @@ export default function Form_Surat_Persetujuan_Tindakan_Medis(props) {
         console.log(get_nama_ttd_saksi)
         console.log(get_nama_tambah_saksi)
 
-        alert('berhasil simpan');
+        toast.success("berhasil simpan", { position: toast.POSITION.TOP_RIGHT });
     }
 
     return (
-    <div ref={ref_print}>
+    <div ref={ref_print} className="bg-white text-black p-4">
+    <ToastContainer />
     <HeaderFormSurat />
     <div className="flex justify-center font-bold mt-3 mb-3">SURAT PERSETUJUAN / PENOLAKAN TINDAKAN MEDIS</div>
     <div className="ml-5 mr-5">

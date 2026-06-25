@@ -18,7 +18,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FormSuratPersetujuanTindakanMedisController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\LaporanController;
-
+use App\Http\Controllers\FormMaternalController;
+use App\Http\Controllers\FormLembarTransferPasienController;
+use App\Http\Controllers\FormCmDoaController;
+use App\Http\Controllers\FormKeluargaController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -109,11 +112,10 @@ Route::middleware(['auth', 'user-role:admin|Tim Ambulan|Operator'])->group(funct
 
     // Route::post('/ref_tim_ambulan', [Tim_AmbulanController::class, 'ref_tim_ambulan'])->name('ref_tim_ambulan');
 
-    Route::get('/form_umum', [DashboardController::class, 'dashboard'])->name('dashboard.form_umum');
-    Route::get('/form_neonatal', [DashboardController::class, 'dashboard'])->name('dashboard.neonatal');
-    Route::get('/form_maternal', [DashboardController::class, 'dashboard'])->name('dashboard.maternal');
-    
-    
+    Route::get('/form_umum/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.form_umum');
+    Route::get('/form_neonatal/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.neonatal');
+    Route::get('/form_maternal/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.maternal');
+    Route::get('/form-keluarga/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.form_keluarga');
 });
 Route::middleware(['auth', 'user-role:admin|Tim Ambulan'])->group(function () {
     Route::post('/ref_icd_10', [CatatanMedisController::class, 'ref_icd_10'])->name('ref_icd_10');
@@ -130,6 +132,7 @@ Route::middleware(['auth', 'user-role:admin|Tim Ambulan'])->group(function () {
     // Route::post('/ref_petugas_tanggung_jawab', [PetugasController::class, 'ref_petugas_tanggung_jawab'])->name('ref_petugas_tanggung_jawab');
     // Route::post('/edit_simpan_petugas', [PetugasController::class, 'edit'])->name('petugas.edit');
     Route::post('/ref_form', [FormController::class, 'ref_form'])->name('ref_form');
+    Route::post('/ref_form_maternal', [FormMaternalController::class, 'ref_form_maternal'])->name('ref_form_maternal');
 
     Route::post('/form/hapus', [CatatanMedisController::class, 'hapus'])->name('form.hapus');
 
@@ -140,19 +143,43 @@ Route::middleware(['auth', 'user-role:admin|Tim Ambulan'])->group(function () {
     Route::post('/form_umum_simpan', [FormUmumController::class, 'simpan'])->name('form_umum.simpan');
     Route::post('/form_umum_perbarui', [FormUmumController::class, 'perbarui'])->name('form_umum.perbarui');
 
+    Route::post('/form_keluarga/simpan', [FormKeluargaController::class, 'simpan'])->name('form_keluarga.simpan');
+    Route::post('/ref_form_keluarga', [FormKeluargaController::class, 'ref_form_keluarga'])->name('ref_form_keluarga');
+    Route::post('/form_keluarga/perbarui', [FormKeluargaController::class, 'perbarui'])->name('form_keluarga.perbarui');
+
     Route::post('/form_neonatal/simpan', [FormNeonatalController::class, 'simpan'])->name('form_neonatal.simpan');
     Route::get('/form_neonatal/{id}', [FormNeonatalController::class, 'edit'])->name('form_neonatal.edit');
     Route::post('/form_neonatal/perbarui', [FormNeonatalController::class, 'perbarui'])->name('form_neonatal.perbarui');
     Route::post('/ref_form_neonatal', [FormNeonatalController::class, 'ref_form_neonatal'])->name('ref_form_neonatal');
+
+    Route::get('/form_surat_keterangan_kematian/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.form_surat_keterangan_kematian');
+    Route::post('/form_surat_keterangan_kematian/simpan', [FormUmumController::class, 'simpan_form_surat_keterangan_kematian'])->name('form_surat_keterangan_kematian.simpan');
+    Route::post('/ref_form_surat_keterangan_kematian', [FormUmumController::class, 'ref_form_surat_keterangan_kematian'])->name('ref_form_surat_keterangan_kematian');
+    Route::post('/form_surat_keterangan_kematian/perbarui', [FormUmumController::class, 'perbarui_form_surat_keterangan_kematian'])->name('form_surat_keterangan_kematian.perbarui');
+
+    Route::get('/form_lembar_transfer_pasien/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.transfer_pasien');
+    Route::post('/ref_form_lembar_transfer_pasien', [FormLembarTransferPasienController::class, 'ref_form_lembar_transfer_pasien'])->name('ref_form_lembar_transfer_pasien');
+    Route::post('/form_lembar_transfer_pasien/simpan', [FormLembarTransferPasienController::class, 'simpan']);
+    Route::post('/form_lembar_transfer_pasien/perbarui', [FormLembarTransferPasienController::class, 'perbarui']);
+
+    Route::get('/form_cm_doa/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.cm_doa');
+    Route::post('/ref_form_cm_doa', [FormCmDoaController::class, 'ref_form_cm_doa'])->name('ref_form_cm_doa');
+    Route::post('/form_cm_doa/simpan', [FormCmDoaController::class, 'simpan']);
+    Route::post('/form_cm_doa/perbarui', [FormCmDoaController::class, 'perbarui']);
 
     Route::get('/pasien', [DashboardController::class, 'dashboard'])->name('dashboard.pasien');
     Route::post('/pasien/tambah', [PasienController::class, 'tambah'])->name('pasien.tambah');
     Route::post('/pasien/edit', [PasienController::class, 'edit'])->name('pasien.edit');
     Route::post('/pasien/hapus', [PasienController::class, 'hapus'])->name('pasien.hapus');
 
-    Route::get('/form_surat_persetujuan_tindakan_medis', [DashboardController::class, 'dashboard'])->name('dashboard.form_surat_persetujuan_tindakan_medis');
+    Route::get('/form_surat_persetujuan_tindakan_medis/{id?}', [DashboardController::class, 'dashboard'])->name('dashboard.form_surat_persetujuan_tindakan_medis');
     Route::post('/form_surat_persetujuan_tindakan_medis/tambah', [FormSuratPersetujuanTindakanMedisController::class, 'tambah'])->name('dashboard.form_surat_persetujuan_tindakan_medis.simpan');
+    Route::post('/ref_form_surat_persetujuan_tindakan_medis', [FormSuratPersetujuanTindakanMedisController::class, 'ref_form_surat_persetujuan_tindakan_medis'])->name('ref_form_surat_persetujuan_tindakan_medis');
+    Route::post('/form_surat_persetujuan_tindakan_medis/perbarui', [FormSuratPersetujuanTindakanMedisController::class, 'perbarui'])->name('form_surat_persetujuan_tindakan_medis.perbarui');
     
+    Route::post('/form_maternal/simpan', [FormMaternalController::class, 'store'])->name('maternal.store');
+    Route::post('/form_maternal/perbarui', [FormMaternalController::class, 'perbarui'])->name('maternal.perbarui');
+    Route::get('/form_maternal/{id}/print', [FormMaternalController::class, 'print'])->name('maternal.print');
     // Route::post('/ref_dashboard', [DashboardController::class, 'ref_dashboard'])->name('ref_dashboard');
     
 
@@ -218,6 +245,7 @@ Route::middleware(['auth', 'user-role:admin|Tim Ambulan|yankes'])->group(functio
 });
 Route::middleware(['auth', 'user-role:admin|Tim Ambulan|yankes|Operator'])->group(function () {
     Route::post('/ref_laporan', [LaporanController::class, 'ref_laporan'])->name('ref_laporan');
+    Route::get('/laporan/export-operasional', [LaporanController::class, 'export_operasional_excel'])->name('laporan.export_operasional');
     Route::post('/ref_tim_ambulan', [Tim_AmbulanController::class, 'ref_tim_ambulan'])->name('ref_tim_ambulan');
     Route::get('/laporan', [DashboardController::class, 'dashboard'])->name('dashboard.laporan');
 });

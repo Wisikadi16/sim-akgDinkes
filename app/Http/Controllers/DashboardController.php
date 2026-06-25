@@ -18,12 +18,13 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function dashboard(Request $req)
+    public function dashboard(Request $req, $id = null)
     {
         // dd("dash");
         return Inertia::render('Dashboard/Index', [
             // 'role' => Auth::user()->role,
             'auth' => Auth::user(),
+            'id' => $id,
         ]);
     }
 
@@ -33,140 +34,112 @@ class DashboardController extends Controller
         return Redirect::route('auth.login');
     }
 
-    public function ref_dashboard(Request $request)
+        public function ref_dashboard(Request $request)
     {
-        if($request->order){
-            $dateString = $request->tgl;
-
-            $dateObject = new DateTime($dateString);
+        if ($request->order) {
+            $dateString = $request->tgl ?? date('Y-m-d');
+            $dateObject = new \DateTime($dateString);
             $tahun = $dateObject->format('Y');
             $bulan_ini = $dateObject->format('m');
             $hari_ini = $dateObject->format('d');
-            $index_hari_ini = $hari_ini-1;
-            // if($index_hari_ini<10){
-            //     $index_hari_ini = "0" . $index_hari_ini;
-            // }
 
-            $data = Tim_Ambulan::with(['order' => function ($query) use ($tahun) {
-                $query->whereRaw("YEAR(STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i')) = ?", [$tahun]);
-            }])->get();
+            // Format pencarian waktu untuk "Live" HARI INI saja (contoh: "13/04/2026")
+            $tgl_live_cari = $dateObject->format('d/m/Y'); 
 
-            $newData = [];
+            $semua_tim = \App\Models\Tim_Ambulan::all();
 
-            foreach ($data as $dt) {
-                $newDt = [];
-                $newDt['id'] = $dt->id;
-                $newDt['nama_tim'] = $dt->nama_tim;
-                // Add other properties you want to include
-                $newDt['total_order_tahun_ini'] = $dt->order->count();
+            // 1. AMBIL SEMUA DATA SEKALIGUS (Biar nggak query berulang-ulang di dalam loop)
+            // Ambil semua order Live hari ini
+            $semua_order_hari_ini = \App\Models\Order::where('waktu_order', 'like', $tgl_live_cari . '%')->get();
+            $total_hari_ini = $semua_order_hari_ini->count();
 
-                $newDt['order_per_bulan'] = [];
-                for ($y = 0; $y < 12; $y++) {
-                    // $newDt['order_per_bulan'][$bulan - 1] = Order::where('id_tim_ambulan', $dt->id)
-                    //     ->whereRaw("YEAR(STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i')) = ?", [$tahun])
-                    //     ->whereRaw("MONTH(STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i')) = ?", [$bulan])
-                    //     ->get();
-                    if ($y < 10) {
-                        $y_bulan = $y + 1;
-                        $tgl_bulan = "0" . $y_bulan;
-                    } else {
-                        $tgl_bulan = $y + 1;
+            // Ambil Rekap untuk perhitungan Bulan & Tahun
+            $total_rekap_bulan_ini = \App\Models\RekapOrderHarian::whereYear('tanggal', $tahun)
+                                        ->whereMonth('tanggal', $bulan_ini)
+                                        ->where('tanggal', '<', $dateObject->format('Y-m-d'))
+                                        ->sum('total_order');
+                                        
+            $total_rekap_tahun_ini = \App\Models\RekapOrderHarian::whereYear('tanggal', $tahun)
+                                        ->where('tanggal', '<', $dateObject->format('Y-m-d'))
+                                        ->sum('total_order');
+
+            // --- A. DATA KPI (Untuk 4 Kotak di Atas) ---
+            $kpi = [
+                'total_armada' => $semua_tim->count(),
+                'total_hari_ini' => $total_hari_ini,
+                'total_bulan_ini' => $total_rekap_bulan_ini + $total_hari_ini,
+                'total_tahun_ini' => $total_rekap_tahun_ini + $total_hari_ini,
+            ];
+
+            // --- B. DATA GRAFIK REAL-TIME HARI INI (Per 3 Jam) ---
+            $labels_jam = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"];
+            $datasets_grafik = [];
+            $rincian_tim = [];
+
+            foreach ($semua_tim as $tim) {
+                // Filter order khusus untuk tim ini dari data yang sudah diambil di atas
+                $order_tim = $semua_order_hari_ini->where('id_tim_ambulan', $tim->id);
+                $total_tim_hari_ini = $order_tim->count();
+
+                // Hitung sebaran jam
+                $data_per_jam = array_fill(0, 8, 0); 
+                foreach ($order_tim as $ord) {
+                    $parts = explode(' ', $ord->waktu_order); // Misal: "13/04/2026 14:30:00"
+                    if (count($parts) > 1) {
+                        $jam = (int) substr($parts[1], 0, 2); // Ambil angka "14"
+                        if ($jam >= 0 && $jam < 3) $data_per_jam[0]++;
+                        elseif ($jam >= 3 && $jam < 6) $data_per_jam[1]++;
+                        elseif ($jam >= 6 && $jam < 9) $data_per_jam[2]++;
+                        elseif ($jam >= 9 && $jam < 12) $data_per_jam[3]++;
+                        elseif ($jam >= 12 && $jam < 15) $data_per_jam[4]++;
+                        elseif ($jam >= 15 && $jam < 18) $data_per_jam[5]++;
+                        elseif ($jam >= 18 && $jam < 21) $data_per_jam[6]++;
+                        elseif ($jam >= 21) $data_per_jam[7]++;
                     }
-                    $order_bulan = Order::where('id_tim_ambulan', $dt->id)
-                    ->whereRaw("YEAR(STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i')) = ?", [$tahun])
-                    ->whereRaw("MONTH(STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i')) = ?", [$tgl_bulan])
-                    ->get();
-                
-                    $newDt['order_per_bulan'][$y] = $order_bulan->count();
                 }
-                
-                $cari_bulan = new DateTime($tahun . '-' . $bulan_ini . '-01');
-                $total_hari_bulan = intval($cari_bulan->format('t'));
 
-                for ($x = 0; $x < $total_hari_bulan; $x++) {
-                    if ($x < 10) {
-                        $x_hari = $x + 1;
-                        $tgl_hari = "0" . $x_hari;
-                    } else {
-                        $tgl_hari = $x + 1;
-                    }
-                    // $tgl_hari = str_pad($hari, 2, '0', STR_PAD_LEFT);
+                $datasets_grafik[] = [
+                    'label' => $tim->nama_tim,
+                    'data' => $data_per_jam,
+                    'fill' => true,
+                    'tension' => 0.4
+                ];
 
-                    $order_hari = Order::where('id_tim_ambulan', $dt->id)
-                    ->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') >= ?", [$tahun . '-' . $bulan_ini . '-' . $tgl_hari . ' 00:00'])
-                    ->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') < ?", [$tahun . '-' . $bulan_ini . '-' . $tgl_hari . ' 23:59'])
-                    ->get();
-         
-                    $newDt['order_per_hari_bulan_ini'][$x] = $order_hari->count();
-
-                    if($index_hari_ini==$x){
-                        $newDt['total_order_hari_ini'] = $order_hari->count();    
-                    }
-
-                }
-                // $newDt['total_order_per_hari_bulan_ini'] = collect($newDt['order_per_hari_bulan_ini'])->flatten()->count();
-                $newDt['total_order_per_hari_bulan_ini'] = array_sum($newDt['order_per_hari_bulan_ini']);
-                $newDt['total_order_per_bulan'] = array_sum($newDt['order_per_bulan']);
-
-
-                $newData[] = $newDt;
+                // C. RINCIAN PER TIM (Untuk Tabel Bawah)
+                $rincian_tim[] = [
+                    'nama_tim' => $tim->nama_tim,
+                    'hari_ini' => $total_tim_hari_ini,
+                    'bulan_ini' => \App\Models\RekapOrderHarian::where('id_tim_ambulan', $tim->id)->whereYear('tanggal', $tahun)->whereMonth('tanggal', $bulan_ini)->where('tanggal', '<', $dateObject->format('Y-m-d'))->sum('total_order') + $total_tim_hari_ini,
+                    'tahun_ini' => \App\Models\RekapOrderHarian::where('id_tim_ambulan', $tim->id)->whereYear('tanggal', $tahun)->where('tanggal', '<', $dateObject->format('Y-m-d'))->sum('total_order') + $total_tim_hari_ini,
+                ];
             }
 
-            // }
-            // for($y=0; $y<12; $y++){
-            //     if ($y < 9) {
-            //         $bulan = $y + 1;
-            //         $tgl_bulan = "0" . $bulan;
-            //     } else {
-            //         $tgl_bulan = $y + 1;
-            //     }
-            //     $cari_bulan = new DateTime($tahun.'-'.$tgl_bulan.'-01');
-            //     $total_hari_bulan = intval($cari_bulan->format('t'));
+            // --- D. TABEL REKAP HISTORI (7 Hari Terakhir) ---
+            $tabel_rekap_histori = [];
+            for ($i = 1; $i <= 7; $i++) {
+                // Mundur 1-7 hari ke belakang
+                $tgl_mundur = \Carbon\Carbon::parse($dateObject->format('Y-m-d'))->subDays($i);
                 
-            //     for($x=0; $x<$total_hari_bulan; $x++){
-            //         if ($x < 9) {
-            //             $hari = $x + 1;
-            //             $tgl_hari = "0" . $hari;
-            //         } else {
-            //             $tgl_hari = $x + 1;
-            //         }
-            //         $data[$y][$x] = Tim_Ambulan::with(['order' => function ($query) use ($tgl_hari, $tgl_bulan, $tahun) {
-            //             $query->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') >= ?", [$tahun.'-'.$tgl_bulan.'-'.$tgl_hari.' 00:00'])
-            //                 ->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') < ?", [$tahun.'-'.$tgl_bulan.'-'.$tgl_hari.' 23:59']);
-            //         }])->get();
-    
-            //         $data[$y][$x]->each(function ($val) use ($total_hari_bulan) {
-            //             $val->total_order = $val->order->count();
-            //         });
-            //     }
-            // }
+                $total_rekap = \App\Models\RekapOrderHarian::where('tanggal', $tgl_mundur->format('Y-m-d'))->sum('total_order');
+                
+                $tabel_rekap_histori[] = [
+                    'tanggal' => $tgl_mundur->translatedFormat('d M Y'),
+                    'total_order' => $total_rekap,
+                ];
+            }
 
-
-            // $total_hari_bulan = intval($dateObject->format('t'));
-            // for($x=0; $x<$total_hari_bulan; $x++){
-            //     if ($x < 9) {
-            //         $hari = $x + 1;
-            //         $tgl_hari = "0" . $hari;
-            //     } else {
-            //         $tgl_hari = $x + 1;
-            //     }
-            //     $data[] = Tim_Ambulan::with(['order' => function ($query) use ($tgl_hari) {
-            //         $query->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') >= ?", ['2024-01-' . $tgl_hari . ' 00:00'])
-            //             ->whereRaw("STR_TO_DATE(waktu_order, '%d/%m/%Y %H:%i') < ?", ['2024-01-' . $tgl_hari . ' 23:59']);
-            //     }])->get();
-
-            //     $data[$x]->each(function ($val) use ($total_hari_bulan) {
-            //         $val->total_order = $val->order->count();
-            //     });
-            // }
+            // KEMBALIKAN DALAM BENTUK JSON YANG SUDAH MATANG
+            return response()->json([
+                'kpi' => $kpi,
+                'grafik_hari_ini' => [
+                    'labels' => $labels_jam,
+                    'datasets' => $datasets_grafik
+                ],
+                'tabel_rekap_histori' => $tabel_rekap_histori,
+                'rincian_tim' => $rincian_tim
+            ]);
         }
-        else{
-            $data = null;
-        }
-
-        // return response()->json($data);
         
-        return response()->json($newData);
-        // return response()->json(['data'=>$data, 'data2'=>$data2]);
+        return response()->json([]);
     }
 }

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Form extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     protected $guarded = [];  
 
     protected $table = "form";
@@ -26,6 +27,10 @@ class Form extends Model
 
     function form_neonatal(){
         return $this->belongsTo('App\Models\Form_Neonatal','id_form');
+    }
+
+    function form_maternal(){
+        return $this->belongsTo('App\Models\Form_Maternal','id_form');
     }
 
 }

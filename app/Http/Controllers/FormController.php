@@ -31,6 +31,9 @@ class FormController extends Controller
             else if($data->jenis=="form neonatal"){
                 $data = Form::with('pasien')->with('form_neonatal')->find($request->id);   
             }
+            else if($data->jenis=="form maternal"){
+                $data = Form::with('pasien')->with('form_maternal')->find($request->id);   
+            }
             // }
         }
         

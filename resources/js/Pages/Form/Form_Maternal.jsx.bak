@@ -1,0 +1,1024 @@
+import React, { useState, useEffect, useRef } from "react";
+
+import HeaderLogo from "@/Components/Headers/HeaderLogo";
+import Identitas_Tim from "@/Components/Form/Identitas_Tim";
+
+import dayjs from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker';
+import { createTheme } from "@mui/system";
+import { TextField } from "@mui/material";
+import { useForm } from "@inertiajs/react";
+import { styled } from '@mui/material/styles';
+
+import SignatureCanvas from 'react-signature-canvas';
+import HeaderFormMaternal from "@/Components/Headers/HeaderFormMaternal";
+
+// const MobileTimePicker = styled(MobileTimePicker)({
+//   '.css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input': {
+//     padding: 0,
+//   }
+// })
+export default function Form_Maternal(props) {
+    const [isPrinting, setIsPrinting] = useState(false);
+    const { data: formData, setData: setFormData, post, processing, errors } = useForm({
+        nama_pasien: '',
+        tanggal_lahir: '',
+        alamat: '',
+        rs_tujuan: '',
+        petugas_rs_tujuan: '',
+        tanggal_rujukan: '',
+        jam_rujukan: '',
+
+        atas_permintaan: [],
+        petugas_pendamping: { dokter: '', perawat: '', bidan: '', driver: '' },
+        kondisi_saat_ini: { hpht: '', usia_kehamilan: '', tb: '', bb: '', ku: '', spo2: '', td: '', rr: '', suhu: '', djj: '' },
+
+        alasan_dirujuk: [],
+        riwayat: [],
+        fisik: [],
+        lab: [],
+
+        riwayat_lain: '',
+        lain_lain: '',
+        diagnosa: '',
+        penanganan: '',
+        tindakan_therapy: '',
+
+    });
+
+    const handleInputChange = (e) => {
+        setFormData(e.target.name, e.target.value);
+    };
+    // Handle checkbox arrays
+    const handleCheckboxArray = (e, fieldName) => {
+        const { value, checked } = e.target;
+        let currentArray = [...formData[fieldName]];
+
+        if (checked) {
+            currentArray.push(value);
+        } else {
+            currentArray = currentArray.filter(item => item !== value);
+        }
+
+        setFormData(fieldName, currentArray);
+    };
+    // Fungsi utama untuk submit
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        post(route('maternal.store'), {
+            preserveScroll: true,
+            onSuccess: () => alert('Data berhasil disimpan!'),
+        });
+    };
+
+    const [jam_lahir_identitas_bayi, set_jam_lahir_identitas_bayi] = React.useState(dayjs(new Date))
+
+    const [identitas_bayi, set_identitas_bayi] = useState({
+        // nik:"",
+        nama_pasien: "",
+        tgl_lahir: "",
+        jam_lahir: ((JSON.stringify(jam_lahir_identitas_bayi.$H)).length == 1 ? "0" + jam_lahir_identitas_bayi.$H : jam_lahir_identitas_bayi.$H) + ":"
+            + ((JSON.stringify(jam_lahir_identitas_bayi.$m)).length == 1 ? "0" + jam_lahir_identitas_bayi.$m : jam_lahir_identitas_bayi.$m),
+        // tgl_penanganan:new Date().toISOString().split('T')[0],
+        jenis_kelamin: "Laki-Laki"
+    });
+
+
+    const oc_identitas_bayi = (e) => {
+        console.log("oc_identitas_bayi");
+        if (e.$H != null) {
+            var jam = JSON.stringify(e.$H);
+            if (jam.length == 1) {
+                jam = "0" + jam;
+            }
+            var menit = JSON.stringify(e.$m);
+            if (menit.length == 1) {
+                menit = "0" + menit;
+            }
+
+            set_identitas_bayi({
+                ...identitas_bayi,
+                ["jam_lahir"]: jam + ":" + menit,
+            });
+        }
+        else {
+            const value = e.target.value;
+            set_identitas_bayi({
+                ...identitas_bayi,
+                [e.target.name]: value,
+            });
+        }
+
+    }
+    console.log("identitas bayi")
+    console.log(identitas_bayi)
+
+    const [identitas_tim_ambulance, set_identitas_tim_ambulance] = useState({
+        tim: '',
+        dokter: '',
+        perawat: '',
+        bidan: '',
+        driver: '',
+    });
+
+    const os_identitas_tim_ambulance = (data) => {
+        console.log("identitas tim ambulance")
+        console.log(data)
+        useEffect(() => {
+            set_identitas_tim_ambulance(data)
+        });
+    }
+
+    console.log("tim ambulan")
+    console.log(identitas_tim_ambulance)
+
+    // const [semua_kecamatan, set_semua_kecamatan] = useState([]);
+    // const [semua_kelurahan, set_semua_kelurahan] = useState([]);
+    const [kode_kecamatan, set_kode_kecamatan] = useState([]);
+
+    const [semua_kecamatan_identitas_ibu, set_semua_kecamatan_identitas_ibu] = useState([]);
+    const [semua_kelurahan_identitas_ibu, set_semua_kelurahan_identitas_ibu] = useState([]);
+    const [semua_kecamatan_identitas_ayah, set_semua_kecamatan_identitas_ayah] = useState([]);
+    const [semua_kelurahan_identitas_ayah, set_semua_kelurahan_identitas_ayah] = useState([]);
+
+    useEffect(() => {
+        axios.post(window.location.origin + '/ref_kecamatan',
+            {
+            }).then(function (response) {
+                set_semua_kecamatan_identitas_ibu(response.data)
+                set_semua_kecamatan_identitas_ayah(response.data)
+            })
+
+        axios.post(window.location.origin + '/ref_kelurahan',
+            {
+                kode_kecamatan: kode_kecamatan,
+            }).then(function (response) {
+                set_semua_kelurahan_identitas_ibu(response.data)
+                set_semua_kelurahan_identitas_ayah(response.data)
+            })
+
+    }, [])
+
+    const [identitas_ibu, set_identitas_ibu] = useState({
+        nama: '',
+        usia: '',
+        pekerjaan: '',
+        golongan_darah: '',
+        no_telepon: '',
+        alamat: '',
+        kecamatan: '',
+        kelurahan: '',
+    });
+
+    const oc_identitas_ibu = (e) => {
+        if (e.target.name == "kecamatan") {
+
+            let index = e.target.selectedIndex;
+            let el = e.target.childNodes[index]
+            let option = el.getAttribute('id');
+            console.log("kec" + option)
+            set_identitas_ibu(
+                {
+                    ...identitas_ibu,
+                    ["kecamatan"]: option,
+                });
+            axios.post(window.location.origin + '/ref_kelurahan',
+                {
+                    kode_kecamatan: option,
+                }).then(function (response) {
+                    set_semua_kelurahan_identitas_ibu(response.data)
+                })
+        }
+        else if (e.target.name == "kelurahan") {
+            // console.log("kel")
+            let index = e.target.selectedIndex;
+            let el = e.target.childNodes[index]
+            let option = el.getAttribute('id');
+            console.log("kel" + option)
+            set_identitas_ibu(
+                {
+                    ...identitas_ibu,
+                    ["kelurahan"]: option,
+                });
+        }
+        else {
+            const value = e.target.value;
+
+            set_identitas_ibu({
+                ...identitas_ibu,
+                [e.target.name]: value,
+            });
+        }
+    }
+
+    const [identitas_ayah, set_identitas_ayah] = useState({
+        nama: '',
+        usia: '',
+        pekerjaan: '',
+        golongan_darah: '',
+        no_telepon: '',
+        alamat: '',
+        kecamatan: '',
+        kelurahan: '',
+    });
+
+    const oc_identitas_ayah = (e) => {
+        if (e.target.name == "kecamatan") {
+
+            let index = e.target.selectedIndex;
+            let el = e.target.childNodes[index]
+            let option = el.getAttribute('id');
+            console.log("kec" + option)
+            set_identitas_ayah(
+                {
+                    ...identitas_ayah,
+                    ["kecamatan"]: option,
+                });
+            axios.post(window.location.origin + '/ref_kelurahan',
+                {
+                    kode_kecamatan: option,
+                }).then(function (response) {
+                    set_semua_kelurahan_identitas_ayah(response.data)
+                })
+        }
+        else if (e.target.name == "kelurahan") {
+            // console.log("kel")
+            let index = e.target.selectedIndex;
+            let el = e.target.childNodes[index]
+            let option = el.getAttribute('id');
+            console.log("kel" + option)
+            set_identitas_ayah(
+                {
+                    ...identitas_ayah,
+                    ["kelurahan"]: option,
+                });
+        }
+        else {
+            const value = e.target.value;
+
+            set_identitas_ayah({
+                ...identitas_ayah,
+                [e.target.name]: value,
+            });
+        }
+    }
+
+    console.log("identitas ibu")
+    console.log(identitas_ibu)
+
+    console.log("identitas ayah")
+    console.log(identitas_ayah)
+
+    const [riwayat_kehamilan_dan_persalinan, set_riwayat_kehamilan_dan_persalinan] = useState({
+        usia_gestasi: '',
+        anc: '',
+        riwayat_penyakit_kehamilan: '',
+        penolong_persalinan: '',
+        cara_persalinan: '',
+        apgar_score: '',
+        apgar_score_status: '',
+    });
+
+    const oc_riwayat_kehamilan_dan_persalinan = (e) => {
+        const value = e.target.value;
+
+        set_riwayat_kehamilan_dan_persalinan({
+            ...riwayat_kehamilan_dan_persalinan,
+            [e.target.name]: value,
+        });
+    }
+
+    function cbx_apgar_score(event) {
+        const { value, checked } = event.target;
+        if (checked) {
+            set_riwayat_kehamilan_dan_persalinan({
+                ...riwayat_kehamilan_dan_persalinan,
+                ["apgar_score_status"]: "ya",
+            });
+        }
+        else {
+            set_riwayat_kehamilan_dan_persalinan({
+                ...riwayat_kehamilan_dan_persalinan,
+                ["apgar_score_status"]: "",
+            });
+        }
+
+    }
+
+    const [kronologi_anamnesis, set_kronologi_anamnesis] = useState("")
+
+    console.log(riwayat_kehamilan_dan_persalinan)
+    console.log(kronologi_anamnesis)
+
+    const [pemeriksaan_fisik, set_pemeriksaan_fisik] = useState({
+        tekanan_darah: '',
+        nadi: '',
+        pernafasan: '',
+        suhu: '',
+        saturasi_oksigen: '',
+        berat_badan_lahir: '',
+        panjang_badan: '',
+        lingkar_kepala: '',
+        lingkar_dada: '',
+        lingkar_perut: '',
+
+        // warna_kulit :'',
+    });
+
+    const oc_pemeriksaan_fisik = (e) => {
+        const value = e.target.value;
+
+        set_pemeriksaan_fisik({
+            ...pemeriksaan_fisik,
+            [e.target.name]: value,
+        });
+    }
+
+    const [pemeriksaan_fisik_warna_kulit, set_pemeriksaan_fisik_warna_kulit] = useState([]);
+
+    function cbx_pemeriksaan_fisik(event) {
+        const { value, checked } = event.target;
+        if (checked) {
+            set_pemeriksaan_fisik_warna_kulit(pemeriksaan_fisik_warna_kulit =>
+                [...pemeriksaan_fisik_warna_kulit, value]
+            );
+        }
+        else {
+            set_pemeriksaan_fisik_warna_kulit(pemeriksaan_fisik_warna_kulit => {
+                return [...pemeriksaan_fisik_warna_kulit.filter(val => val !== value)]
+            });
+        }
+
+    }
+
+    console.log(pemeriksaan_fisik)
+    console.log(pemeriksaan_fisik_warna_kulit)
+
+    const [terapi_tindakan_konsul, set_terapi_tindakan_konsul] = useState([])
+
+    const oc_tambah_terapi_tindakan_konsul = () => {
+        const c_val = [...terapi_tindakan_konsul, []];
+        set_terapi_tindakan_konsul(c_val);
+
+    }
+
+    const oc_value_terapi_tindakan_konsul = (e, i) => {
+        const value = [...terapi_tindakan_konsul];
+        value[i] = e.target.value;
+        set_terapi_tindakan_konsul(value);
+    }
+
+    const oc_hapus_terapi_tindakan_konsul = (i) => {
+        console.log("hapus " + i)
+        const value = [...terapi_tindakan_konsul];
+        value.splice(i, 1);
+        set_terapi_tindakan_konsul(value);
+    }
+
+    const [diagnosis_medis, set_diagnosis_medis] = useState([])
+
+    const oc_tambah_diagnosis_medis = () => {
+        const c_val = [...diagnosis_medis, []];
+        set_diagnosis_medis(c_val);
+
+    }
+
+    const oc_value_diagnosis_medis = (e, i) => {
+        const value = [...diagnosis_medis];
+        value[i] = e.target.value;
+        set_diagnosis_medis(value);
+    }
+
+    const oc_hapus_diagnosis_medis = (i) => {
+        console.log("hapus " + i)
+        const value = [...diagnosis_medis];
+        value.splice(i, 1);
+        set_diagnosis_medis(value);
+    }
+
+    const [rumah_sakit_rujukan, set_rumah_sakit_rujukan] = useState({
+        tp_jam: dayjs(new Date),
+
+    })
+
+    const oc_rumah_sakit_rujukan = () => {
+
+    }
+
+    let ref_ttd_petugas_ambulance = useRef({})
+
+    return (
+        <div className="mb-3 w-full">
+            <div className="flex justify-center">
+                <a href="/catatan_medis"
+                    className="mb-3 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1.5 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800">
+                    Kembali
+                </a>
+            </div>
+            <div>
+                <div className="text-xs md:text-sm sm:text-xs">
+                    <HeaderFormMaternal />
+                </div>
+                <div className="grid grid-cols-2 text-xxs md:text-sm sm:text-xs">
+                    {/* <Identitas_Tim onSubmit={getDataIdentitas}/> */}
+                    <div className="flex justify-center">
+                        RUJUKAN MATERNAL
+                    </div>
+                    <div className="mr-3 col-start-2 col-end-6">
+                        <div className="flex">
+                            <div className="w-[50%]">Nama Pasien</div>
+                            <div className="w-[50%]">
+                                <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text" name="nama_pasien" value={formData.nama_pasien} onChange={handleInputChange} />
+                            </div>
+                        </div>
+                        <div className="flex">
+                            <div className="w-[50%]">Tanggal Lahir (Umur)</div>
+                            <div className="w-[30%]">
+                                <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="date" name="tanggal_lahir" value={formData.tanggal_lahir} onChange={handleInputChange}></input>
+                            </div>
+                            <div className="w-[20%]">
+                                <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>
+                            </div>
+                        </div>
+                        <div className="flex">
+                            <div className="w-[50%]">Alamat</div>
+                            <div className="w-[50%]">
+                                <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text" name="alamat" value={formData.alamat} onChange={handleInputChange}></input>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex border-2 w-full">
+                    <div className="text-sm w-[30%]">
+                        <div className="font-bold flex justify-center border-2">RUMAH SAKIT TUJUAN</div>
+                        <div className="border-2">
+                            <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text" name="rs_tujuan" value={formData.rs_tujuan} onChange={handleInputChange}></input>
+                        </div>
+                    </div>
+                    <div className="text-sm w-[30%]">
+                        <div className="font-bold flex justify-center border-2">Petugas RS Tujuan yang dihubungi</div>
+                        <div className="border-2">
+                            <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text" name="petugas_rs_tujuan" value={formData.petugas_rs_tujuan} onChange={handleInputChange}></input>
+                        </div>
+                    </div>
+                    <div className="text-sm w-[20%]">
+                        <div className="font-bold flex justify-center border-2">Tanggal</div>
+                        <div className="border-2">
+                            <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="date" name="tanggal_rujukan" value={formData.tanggal_rujukan} onChange={handleInputChange}></input>
+                        </div>
+                    </div>
+                    <div className="text-sm w-[20%]">
+                        <div className="font-bold flex justify-center border-2">Jam</div>
+                        <div className="border-2">
+                            <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="time" name="jam_rujukan" value={formData.jam_rujukan} onChange={handleInputChange}></input>
+                        </div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2">
+                    <div className="flex border-2 text-xxs md:text-sm sm:text-xs">
+                        <div>
+                            <div>Atas permintaan :</div>
+                            <div className="flex">
+                                <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike"></input>
+                                <label for="vehicle1" className="mr-3">Dokter</label>
+                                <input type="checkbox" id="vehicle2" name="vehicle2" value="Car"></input>
+                                <label for="vehicle2">Pasien/Keluarga</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="vehicle3" name="vehicle3" value="Car"></input>
+                                <label for="vehicle2">Lainnya</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="">
+                        <div className="flex justify-center border-2">Petugas Pendamping</div>
+                        <div>Dokter</div>
+                        <div>Perawat</div>
+                        <div>Bidan</div>
+                        <div>Driver</div>
+                    </div>
+
+                    <div className="">
+                        <div className="flex justify-center border-2">Nama</div>
+                        <div>
+                            <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>
+                        </div>
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+                <div className="border-2 font-bold text-xxs md:text-sm sm:text-xs">KONDISI SAAT INI</div>
+                <div className="flex border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[50%]">HPHT</div>
+                    <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                </div>
+                <div className="flex border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[50%]">Usia Kehamilan (mg)</div>
+                    <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                </div>
+                <div className="flex border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">TB (cm)</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">BB (Kg)</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+                <div className="flex border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">KU</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">Spo2</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+                <div className="flex border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">TD</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">RR</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+                <div className="flex border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">Suhu</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                    <div className="flex w-[50%]">
+                        <div className="w-[50%]">Denyut jantung janin</div>
+                        <div className="w-[50%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div>JIKA DIDAPATI TANDA SYOK</div>
+                    <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                </div>
+                <div>Pasien dengan nadi {">"} 100 x/mnt dan TD sisfolik {"<"} 100 mmHg</div>
+                <div>Pemasangan IV Line 2 jalur dengan abocath</div>
+                <div className="flex">
+                    <div><input type="checkbox" value="PEB/Eklampsia" onChange={(e) => handleCheckboxArray(e, 'alasan_dirujuk')}></input></div>
+                    <label>TD</label>
+                    <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    /
+                    <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>mmHg</div>
+                    <div className="ml-3">Pukul</div>
+                    <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                </div>
+                <div className="flex">
+                    <div><input type="checkbox"></input></div>
+                    <label>Ulangi 1 Liter jika masih Hipotensi</label>
+                    <div className="ml-3">TD<input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>mmHg</div>
+                    /
+                    <div className="ml-3">Pukul</div>
+                    <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                </div>
+                <div className="flex">
+                    <div><input type="checkbox"></input></div>
+                    <label>Pasang kateter</label>
+                    <div className="ml-3">Urine output<input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>cc</div>
+                    /
+                    <div className="ml-3">Pukul</div>
+                    <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                </div>
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">ALASAN DI RUJUK {"(Beri tanda dan catat semua yang sesuai)"}</div>
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%] border-2"></div>
+                    <div className="flex border-2 w-[15%]">
+                        <div><input type="checkbox"></input></div>
+                        <label>PEB/Eklampsia</label>
+                    </div>
+                    <div className="flex border-2 w-[20%]">
+                        <div><input type="checkbox"></input></div>
+                        <label>Perdarahan</label>
+                    </div>
+                    <div className="flex border-2 w-[25%]">
+                        <div><input type="checkbox"></input></div>
+                        <label>Partus Macet</label>
+                    </div>
+                    <div className="flex border-2 w-[15%]">
+                        <div><input type="checkbox"></input></div>
+                        <label>Persalinan Prematur</label>
+                    </div>
+                    <div className="flex border-2 w-[15%]">
+                        <div><input type="checkbox"></input></div>
+                        <label>Infeksi Nifas</label>
+                    </div>
+                </div>
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%] border-2">Riwayat</div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Sakit Kepala</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Nyeri Ulu Hati</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Pandangan Kabur</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Kejang</label>
+                        </div>
+                    </div>
+                    <div className="w-[20%]">
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Usia Kehamilan</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Nyeri</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Kontraksi</label>
+                        </div>
+                    </div>
+                    <div className="w-[25%]">
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>panograf melewati garis waspada</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>tidak adekuatik {"(lrek, 3x/10 mnt, durasi < 40)"}</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>tidak terbaca</label>
+                        </div>
+                        <div className="border-2 w-full h-[25%]">
+                            <div className="flex">
+                                <div><input type="checkbox"></input></div>
+                                <label>kelainan letak</label>
+                            </div>
+                            <div className="flex">
+                                <div><input type="checkbox"></input></div>
+                                <label>Taksiran berat bayi</label>
+                                <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>gr</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>{"<37 minggu"}</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Ketuban pecah</label>
+                        </div>
+                    </div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Demam, S {"> 38"} C</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>kesadaran</label>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%] border-2">Riwayat lain</div>
+                    <div className="w-[90%]">
+                        <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>
+                    </div>
+                </div>
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%] border-2">Fisik</div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>TD{">"}140/90 mmHg</label>
+                        </div>
+                    </div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Nadi{">"}100/mnt</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[25%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Sistolik{"<"}100 mmHg</label>
+                        </div>
+                    </div>
+                    <div className="w-[25%]">
+                        <div className="border-2 w-full h-[40%]">
+                            <div>Penurunan</div>
+                            <div>
+                                <select className="pt-0 pb-0">
+                                    <option>1/5</option>
+                                    <option>2/5</option>
+                                    <option>3/5</option>
+                                    <option>4/5</option>
+                                    <option>5/5</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="border-2 w-full h-[40%]">
+                            <div className="flex">
+                                <div><input type="checkbox"></input></div>
+                                <label>Lama persalinan</label>
+                            </div>
+                            <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>jam</div>
+                        </div>
+                        <div className="flex border-2 w-full h-[20%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Moulase</label>
+                        </div>
+                    </div>
+                    <div className="w-[20%]">
+                        <div className="flex border-2 w-full h-[30%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Usia kehamilan</label>
+                            <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>mgg</div>
+                        </div>
+                        <div className="flex border-2 w-full h-[30%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Kontraksi</label>
+                            <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>/10 mnt/</div>
+                            <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>dtk</div>
+                        </div>
+                        <div className="flex border-2 w-full h-[20%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Ketuban pecah</label>
+                            <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>jam</div>
+                        </div>
+                        <div className="flex border-2 w-full h-[20%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>leukosit</label>
+                        </div>
+                    </div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[30%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Nadi{">"}100x/mnt</label>
+                            <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input>mgg</div>
+                        </div>
+                        <div className="flex border-2 w-full h-[30%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Sistolik</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[20%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Lochia berbau</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%] border-2">Lab</div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[50%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Proteinuria 1+2+3+</label>
+                        </div>
+                        <div className="flex border-2 w-full h-[50%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>HIV/AIDS</label>
+                        </div>
+                    </div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[50%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Hb</label>
+                        </div>
+                    </div>
+                    <div className="w-[25%]">
+                        <div className="flex border-2 w-full h-[50%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>HBSAg</label>
+                        </div>
+                    </div>
+                    <div className="w-[20%]">
+                        <div className="flex border-2 w-full h-[50%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Leukosit LEA {"air ket"}</label>
+                        </div>
+                    </div>
+                    <div className="w-[15%]">
+                        <div className="flex border-2 w-full h-[50%]">
+                            <div><input type="checkbox"></input></div>
+                            <label>Leukosit</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%] border-2">Lain-lain</div>
+                    <div className="w-[90%] border-2">
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text" name="nama_pasien" value={formData.nama_pasien} onChange={handleInputChange} /></div>
+                    </div>
+                </div>
+
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%]">DIAGNOSA</div>
+                    <div className="w-[90%]">
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[15%]">PENANGANAN</div>
+                    <div className="w-[85%]">
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[15%]">TINDAKAN/THERAPY</div>
+                    <div className="w-[85%]">
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                </div>
+
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    HAL PENTING YANG PERLU DICATAT SELAMA PERJALANAN
+                </div>
+
+                <div className="flex font-bold border-2 text-xxs md:text-sm sm:text-xs">
+                    <div className="w-[10%] border-2">
+                        <div>Waktu</div>
+                        <div><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                    </div>
+                    <div className="w-[90%] border-2">
+                        <div className="flex justify-center">Monitoring</div>
+                        <div className="flex w-full">
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">Tanda Vital</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">TD</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                        </div>
+                        <div className="flex w-full">
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">KU</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">pernafasan</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                        </div>
+                        <div className="flex w-full">
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">Nadi</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">PPV</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                        </div>
+                        <div className="flex w-full">
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">Suhu</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">VT</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                        </div>
+                        <div className="flex w-full">
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">Observasi His</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                        </div>
+                        <div className="flex w-full">
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">DJJ</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                        </div>
+                        <div className="flex w-full">
+                            <div className="flex w-[50%]">
+                                <div className="w-[30%]">Monitoring keadaan pasien</div>
+                                <div className="w-[70%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-center border-2 text-xxs md:text-sm sm:text-xs">NAMA DAN TANDA TANGAN PETUGAS</div>
+
+                <div className="flex mt-3 border-2 text-sm">
+                    <div className="w-full border-2">
+                        <div className="flex">
+                            <div className="w-[40%]">Tanggal</div>
+                            <div className="w-[60%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="date"></input></div>
+                        </div>
+                        <div className="flex">
+                            <div className="w-[40%]">Jam</div>
+                            <div className="w-[60%]">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <MobileTimePicker value={rumah_sakit_rujukan.tp_jam} onChange={oc_rumah_sakit_rujukan} ampm={false} slotProps={{
+                                        textField: {
+                                            size: "small",
+                                        },
+                                    }} />
+                                </LocalizationProvider>
+                            </div>
+                        </div>
+                        <div className="flex">
+                            <div className="w-[40%]">RS / Puskesmas</div>
+                            <div className="w-[60%]"><input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"></input></div>
+                        </div>
+                    </div>
+
+                    <div className="w-full border-2">
+                        <div className="relative border-solid border-2">
+                            <div className="flex justify-center">Yang menyerahkan</div>
+                            <div>
+                                <SignatureCanvas
+                                    canvasProps={{ className: 'sigCanvas w-full h-full' }}
+                                    ref={ref_ttd_petugas_ambulance}
+                                // onEnd={oe_ttd_keluarga_pasien_petugas_rs}
+                                />
+                            </div>
+                            <div>
+                                <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"
+ name="keluarga_pasien_petugas_rs"
+ // onChange={e => set_data_nama_ttd_keluarga_pasien_petugas_rs(e.target.value)}
+                                // value={get_data_nama_ttd_keluarga_pasien_petugas_rs} 
+                                />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div className="w-full border-2">
+                        <div className="relative border-solid border-2">
+                            <div className="flex justify-center">
+                                Yang Menerima
+                            </div>
+                            <div>
+                                <SignatureCanvas
+                                    canvasProps={{ className: 'sigCanvas w-full h-full' }}
+                                    ref={ref_ttd_petugas_ambulance}
+                                // onEnd={oe_ttd_keluarga_pasien_petugas_rs}
+                                />
+                            </div>
+                            <div>
+                                <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-red-500 focus:ring-red-500/20 shadow-sm transition-all bg-white" type="text"
+ name="keluarga_pasien_petugas_rs"
+ // onChange={e => set_data_nama_ttd_keluarga_pasien_petugas_rs(e.target.value)}
+                                // value={get_data_nama_ttd_keluarga_pasien_petugas_rs} 
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6 mb-10 text-sm">
+                                <button
+                                    type="button"
+                                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+                                    onClick={() => {
+                                        alert('Fitur Print sedang disiapkan!');
+                                        // Nanti diarahkan ke route('maternal.print') jika ID sudah disave
+                                    }}
+                                >
+                                    Print
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleSubmit}
+                                    disabled={processing}
+                                    className={`${processing ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'} text-white font-bold py-2 px-4 rounded`}
+                                >
+                                    {processing ? 'Menyimpan...' : 'Simpan'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+    )
+}

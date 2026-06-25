@@ -18,6 +18,7 @@ use App\Models\Surat_Keterangan_Kematian;
 use App\Models\Tim_Ambulan;
 use App\Models\Icd_10;
 use App\Models\Icd_9;
+use App\Models\FormKeluarga;
 
 class CatatanMedisController extends Controller
 {
@@ -26,16 +27,22 @@ class CatatanMedisController extends Controller
         if ($request->id == null) {
             $periode_dari = $request->periode_dari;
             $periode_sampai = $request->periode_sampai;
+            $search = $request->search;
+
+            $query = Form::with('pasien')->whereBetween('tgl_penanganan', [$periode_dari, $periode_sampai]);
+
             if (Auth::user()->role == "Tim Ambulan") {
-                $data = Form::with('pasien')->whereBetween('tgl_penanganan', [$periode_dari, $periode_sampai])->where("id_pembuat", Auth::user()->id)->orderBy('id', 'desc')
-                    // ->get();
-                    ->paginate(10);
-            } else {
-                // $form_umum = Form_Umum::with('pasien')->get();
-                $data = Form::with('pasien')->whereBetween('tgl_penanganan', [$periode_dari, $periode_sampai])->orderBy('id', 'desc')
-                    // ->get();
-                    ->paginate(10);
+                $query->where("id_pembuat", Auth::user()->id);
             }
+
+            if (!empty($search)) {
+                $query->whereHas('pasien', function($q) use ($search) {
+                    $q->where('nama', 'LIKE', '%'.$search.'%')
+                      ->orWhere('nik', 'LIKE', '%'.$search.'%');
+                });
+            }
+
+            $data = $query->orderBy('id', 'desc')->paginate(10);
 
             // return response()->json($data);
 
@@ -71,19 +78,40 @@ class CatatanMedisController extends Controller
     {
         $data = Form::find($request->id);
 
-        $jenis_form = $data->jenis;
+        if (!$data) {
+            return response()->json("Data tidak ditemukan", 404);
+        }
+
+        $jenis_form = strtolower($data->jenis);
+        
         if ($jenis_form == "form umum") {
             $data2 = Form_Umum::where('id_form', $request->id)->first();
-
-            $data2->delete();
-            $data->delete();
-        }
-        if ($jenis_form == "form neonatal") {
+            if ($data2) $data2->delete();
+        } else if ($jenis_form == "form neonatal") {
             $data2 = Form_Neonatal::where('id_form', $request->id)->first();
-
-            $data2->delete();
-            $data->delete();
+            if ($data2) $data2->delete();
+        } else if ($jenis_form == "form maternal") {
+            if (class_exists('App\Models\Form_Maternal')) {
+                $data2 = \App\Models\Form_Maternal::where('id', $data->id_form)->first();
+                if ($data2) $data2->delete();
+            }
+        } else if ($jenis_form == "form surat persetujuan tindakan medis") {
+            if (class_exists('App\Models\Surat_Persetujuan_Tindakan_Medis')) {
+                $data2 = \App\Models\Surat_Persetujuan_Tindakan_Medis::where('id', $data->id_form)->first();
+                if ($data2) $data2->delete();
+            }
+        } else if ($jenis_form == "form surat keterangan kematian") {
+            if (class_exists('App\Models\Surat_Keterangan_Kematian')) {
+                $data2 = \App\Models\Surat_Keterangan_Kematian::where('id', $data->id_form)->first();
+                if ($data2) $data2->delete();
+            }
+        } else if ($jenis_form == "form-keluarga") {
+            $data2 = \App\Models\FormKeluarga::where('id_form', $data->id)->first();
+            if (!$data2) $data2 = \App\Models\FormKeluarga::find($data->id_form);
+            if ($data2) $data2->delete();
         }
+
+        $data->delete();
 
         return response()->json("Berhasil hapus data");
     }

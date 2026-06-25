@@ -23,12 +23,15 @@ class Tim_AmbulanController extends Controller
             // $data1 = Tim_Ambulan::get();
 
             // $data1 = collect($data1);
-            $response = Http::get("http://119.2.50.170:9094/navara/api/ambulan_hebat");
-
-            if ($response->successful()) {
-                $data2 = $response->json();
-            } else {
-                $data2 = "";
+            try {
+                $response = Http::timeout(3)->get("http://119.2.50.170:9094/navara/api/ambulan_hebat");
+                if ($response->successful()) {
+                    $data2 = $response->json();
+                } else {
+                    $data2 = [];
+                }
+            } catch (\Exception $e) {
+                $data2 = [];
             }
 
             foreach ($data2 as $item) {

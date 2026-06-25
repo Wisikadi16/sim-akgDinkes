@@ -1,3 +1,79 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --dt-header-bg: #f8fafc;
+  --dt-header-text: #64748b;
+  --dt-border: #f1f5f9;
+  --dt-row-text: #334155;
+  --dt-striped-bg: #f8fafc;
+  --dt-hover-bg: #f1f5f9;
+  --dt-hover-text: #0f172a;
+  --chart-text: #64748b;
+  --chart-grid: #f1f5f9;
+  --dt-row-belum-diterima: #fff1f2;
+  --dt-sticky-bg: #ffffff;
+}
+
+html.dark {
+  --dt-header-bg: #1e293b;
+  --dt-header-text: #94a3b8;
+  --dt-border: rgba(51, 65, 85, 0.5);
+  --dt-row-text: #cbd5e1;
+  --dt-striped-bg: rgba(30, 41, 59, 0.5);
+  --dt-hover-bg: rgba(220, 38, 38, 0.15);
+  /* Merah gelap transparan sesuai sidebar */
+  --dt-hover-text: #ef4444;
+  /* Teks merah menyala untuk kontras saat hover */
+  --chart-text: #cbd5e1;
+  --chart-grid: rgba(148, 163, 184, 0.1);
+  --dt-row-belum-diterima: rgba(225, 29, 72, 0.15);
+  /* Merah gelap transparan untuk status belum diterima */
+  --dt-sticky-bg: #1e293b;
+}
+
+/* Global rule to make the last column (usually Aksi) sticky for ALL DataTables */
+.rdt_TableHeadRow > div:last-child,
+.rdt_TableRow > div:last-child {
+  position: sticky !important;
+  right: 0 !important;
+  z-index: 10 !important;
+  box-shadow: -2px 0 4px -2px rgba(0,0,0,0.1) !important;
+}
+
+.rdt_TableHeadRow > div:last-child {
+  background-color: var(--dt-header-bg, #f8fafc) !important;
+  z-index: 11 !important;
+}
+
+.rdt_TableRow > div:last-child {
+  background-color: var(--dt-sticky-bg, #ffffff) !important;
+}
+
+/* Match hover state */
+.rdt_TableRow:hover > div:last-child {
+  /* Provide a solid base, then overlay the hover color */
+  background: linear-gradient(var(--dt-hover-bg, transparent), var(--dt-hover-bg, transparent)), var(--dt-sticky-bg, #ffffff) !important;
+}
+
+/* Match striped state (react-data-table-component applies stripes to odd rows) */
+.rdt_TableRow:nth-child(odd) > div:last-child {
+  background: linear-gradient(var(--dt-striped-bg, transparent), var(--dt-striped-bg, transparent)), var(--dt-sticky-bg, #ffffff) !important;
+}
+
+/* Ensure hover state still applies on striped rows */
+.rdt_TableRow:nth-child(odd):hover > div:last-child {
+  background: linear-gradient(var(--dt-hover-bg, transparent), var(--dt-hover-bg, transparent)), var(--dt-sticky-bg, #ffffff) !important;
+}
+
+/* Match conditional row style (e.g. Belum Diterima) */
+.rdt_TableRow.row-belum-diterima > div:last-child {
+  background: linear-gradient(var(--dt-row-belum-diterima, transparent), var(--dt-row-belum-diterima, transparent)), var(--dt-sticky-bg, #ffffff) !important;
+}
+
+/* Match conditional row style on hover */
+.rdt_TableRow.row-belum-diterima:hover > div:last-child {
+  /* Hover over a colored row usually combines hover and base color, but in react-data-table hover replaces background */
+  background: linear-gradient(var(--dt-hover-bg, transparent), var(--dt-hover-bg, transparent)), var(--dt-sticky-bg, #ffffff) !important;
+}

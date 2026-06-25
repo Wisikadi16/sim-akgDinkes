@@ -1,0 +1,31 @@
+
+> build
+> vite build
+
+vite v4.5.14 building for production...
+transforming...
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 1384 modules transformed.
+✓ built in 3.61s
+"default" is not exported by "resources/js/Pages/Form/Form_Surat_Persetujuan_Tindakan_Medis.jsx", imported by "resources/js/Pages/Dashboard/Index.jsx".
+file: /var/www/sim-akg/resources/js/Pages/Dashboard/Index.jsx:20:7
+18: import Form_Maternal from "@/Pages/Form/Form_Maternal";
+19: import Form_Surat_Keterangan_Kematian from "@/Pages/Form/Form_Surat_Keterangan_Kematian";
+20: import Form_Surat_Persetujuan_Tindakan_Medis from "@/Pages/Form/Form_Surat_Persetujuan_Tindakan_Medis";
+           ^
+21: 
+22: import Pasien from "@/Pages/Dashboard/Pasien";
+error during build:
+RollupError: "default" is not exported by "resources/js/Pages/Form/Form_Surat_Persetujuan_Tindakan_Medis.jsx", imported by "resources/js/Pages/Dashboard/Index.jsx".
+    at error (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:2287:30)
+    at Module.error (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:13745:16)
+    at Module.traceVariable (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:14175:29)
+    at ModuleScope.findVariable (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:12615:39)
+    at FunctionScope.findVariable (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:7124:38)
+    at ChildScope.findVariable (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:7124:38)
+    at Identifier.bind (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:8319:40)
+    at CallExpression.bind (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:5888:28)
+    at CallExpression.bind (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:9890:15)
+    at Property.bind (file:///var/www/sim-akg/node_modules/rollup/dist/es/shared/node-entry.js:5892:23)

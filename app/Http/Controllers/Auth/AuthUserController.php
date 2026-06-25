@@ -89,17 +89,19 @@ class AuthUserController extends Controller
     {
         // dd(Auth::user());
         if(Auth::attempt(['username'=>$req->username, 'password'=>$req->password])){
-            // return Redirect::route('auth.dashboard');
-            if(Auth::check() && Auth::user()->role=="admin" || Auth::user()->role=="yankes"){
+            $role = strtolower(Auth::user()->role);
+            if(Auth::check() && in_array($role, ["admin", "yankes"])){
                 return Redirect::route('dashboard');
             }
-            if(Auth::check() && Auth::user()->role=="Tim Ambulan"){
-                // dd("tim_ambulan");
+            if(Auth::check() && $role === "tim ambulan"){
                 return Redirect::route('dashboard.order');
             }
-            if(Auth::check() && Auth::user()->role=="Operator"){
+            if(Auth::check() && $role === "operator"){
                 return Redirect::route('dashboard.order');
             }
+            
+            Auth::logout();
+            return Redirect::route('auth.login')->with('status', 'Akses ditolak: role tidak dikenali');
         }
         else{
             return Redirect::route('auth.login')->with(

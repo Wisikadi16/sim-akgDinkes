@@ -32,10 +32,22 @@ class PasienController extends Controller
     }
 
     public function tambah(Request $request){
-        $pasien = Pasien::where('nik', $request->nik)->first();
-        if($pasien==null){
+        $nik = $request->nik;
+
+        if ($nik === null || $nik === '') {
+            // Auto generate NON- NIK
+            $cari_pasien_non_nik = Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
+            if($cari_pasien_non_nik==null){
+                $nik = "NON-1";
+            }
+            else{
+                $get_nik = $cari_pasien_non_nik->nik;
+                $get_nomor = substr($get_nik, strlen("NON-"));
+                $nik = "NON-".((int)$get_nomor + 1);
+            }
+
             Pasien::create([
-                'nik' => $request->nik,
+                'nik' => $nik,
                 'nama' => $request->nama,
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat_domisili,
@@ -48,12 +60,28 @@ class PasienController extends Controller
             ]);
 
             return response()->json("Berhasil menambahkan data");
-            // return redirect()->route('dashboard.pasien')->with('success', 'Pasien berhasil disimpan');
-        }
+        } else {
+            // NIK is provided, check if already exists
+            $pasien = Pasien::where('nik', $nik)->first();
+            if($pasien==null){
+                Pasien::create([
+                    'nik' => $nik,
+                    'nama' => $request->nama,
+                    'no_telepon' => $request->no_telepon,
+                    'alamat' => $request->alamat_domisili,
+                    'alamat_kelurahan' => $request->alamat_kelurahan,
+                    'alamat_kecamatan' => $request->alamat_kecamatan,
+                    'tgl_lahir' => $request->tgl_lahir,
+                    'jenis_kelamin' => $request->jenis_kelamin,
+                    'status' => $request->status,
+                    'tgl_meninggal' => $request->tgl_meninggal,
+                ]);
 
-        return response()->json("Pasien sudah terdaftar");
-        // return Redirect::route('dashboard.pasien')->with('success', 'Pasien berhasil disimpan');
-        // return redirect()->route('dashboard.pasien')->with('warning', 'Pasien sudah ada');
+                return response()->json("Berhasil menambahkan data");
+            }
+
+            return response()->json("Pasien sudah terdaftar", 409);
+        }
     }
 
     public function edit(Request $request)
@@ -110,10 +138,19 @@ class PasienController extends Controller
 
     public function hapus(Request $request)
     {
-        $data = Pasien::find($request->id);
-
-        $data->delete();
-
-        return response()->json("Berhasil hapus data");
+        try {
+            $data = Pasien::find($request->id);
+            if ($data) {
+                $data->delete();
+                return response()->json("Berhasil hapus data");
+            }
+            return response()->json("Data tidak ditemukan", 404);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Error Code 23000: Integrity constraint violation (Foreign Key fails)
+            if ($e->getCode() == 23000) {
+                return response()->json("Gagal: Pasien tidak dapat dihapus karena masih memiliki riwayat Catatan Medis.", 409);
+            }
+            return response()->json("Gagal menghapus data: Terjadi kesalahan pada database.", 500);
+        }
     }
 }

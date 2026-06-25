@@ -16,8 +16,8 @@ class UserRoleMiddleware
      */
     public function handle(Request $request, Closure $next, $role): Response
     {
-        $role_sekarang=Auth::user()->role;
-        $role_array=explode("|",$role);
+        $role_sekarang=strtolower(Auth::user()->role);
+        $role_array=array_map('strtolower', explode("|",$role));
         // dd($role_array);
         if(Auth::check() && in_array($role_sekarang, $role_array)){
             return $next($request);

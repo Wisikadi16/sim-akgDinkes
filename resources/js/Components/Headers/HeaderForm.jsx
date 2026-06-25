@@ -2,6 +2,7 @@ import React , {useState, useEffect} from "react";
 import axios from 'axios';
 
 import HeaderLogo from "@/Components/Headers/HeaderLogo";
+import { toast } from "react-toastify";
 
 export default function HeaderForm(props) {
     const [get_data, set_data] = useState({
@@ -122,6 +123,15 @@ export default function HeaderForm(props) {
                     ["tgl_lahir"]: e.target.value,
                 });
         }
+        else if(e.target.name=="nik"){
+            if (!/^\d*$/.test(value) || value.length > 16) {
+                return;
+            }
+            set_data({
+                ...get_data,
+                [e.target.name]: value,
+            });
+        }
         else{
             set_data({
                 ...get_data,
@@ -175,7 +185,7 @@ export default function HeaderForm(props) {
             // console.log("cari nik")
             // console.log(response)
             if(response.data =="Nik tidak ditemukan"){
-                alert("nik tidak ditemukan di database")
+                toast.error("nik tidak ditemukan di database", { position: toast.POSITION.TOP_RIGHT })
                 set_data_automatis_pasien(false)
                 set_data({
                     ...get_data,
@@ -222,7 +232,7 @@ export default function HeaderForm(props) {
     <div className="grid grid-cols-2 text-xs md:text-sm sm:text-xs">
         <HeaderLogo />
         <div className="mt-3 mr-3 border-solid border-2 grid grid-cols-3">
-            <div className="">NIK</div>
+            <div >NIK</div>
             <div className="flex col-span-2 h-7">
                 <div>:</div>
                 {
@@ -233,6 +243,7 @@ export default function HeaderForm(props) {
                         name = "nik"
                         value={get_data.nik}
                         onChange={handleChange}
+                        maxLength="16"
                         placeholder="nik boleh kosong"
                         />
                         <button className="w-1/6 text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold rounded" 
@@ -248,7 +259,7 @@ export default function HeaderForm(props) {
                     <div>{get_data.nik}</div>
                 }
             </div>
-            <div className="">Nama Pasien</div>
+            <div >Nama Pasien</div>
             <div className="flex col-span-2 h-7">
                 <div>:</div>
                 {
@@ -256,7 +267,7 @@ export default function HeaderForm(props) {
                     <div>Mohon Tunggu</div>
                 }
                 {
-                    tunggu==false && props.isPrinting==false && get_data_automatis_pasien==false &&
+                    tunggu==false && props.isPrinting==false &&
                     <input className="w-full text-xs md:text-sm sm:text-xs p-0" 
                         type="text" 
                         name = "nama_pasien"
@@ -265,19 +276,15 @@ export default function HeaderForm(props) {
                     />
                 }
                 {
-                    tunggu==false && props.isPrinting==false && get_data_automatis_pasien &&
-                    <div>{get_data.nama_pasien}</div>
-                }
-                {
                     tunggu==false && props.isPrinting &&
                     <div>{get_data.nama_pasien}</div>
                 }
             </div>
-            <div className="">Tgl Lahir / Umur</div>
+            <div >Tgl Lahir / Umur</div>
             <div className="flex col-span-2 h-7">
                 <div>:</div>
                 {
-                    props.isPrinting==false && get_data_automatis_pasien==false &&
+                    props.isPrinting==false &&
                     <input className="w-full text-xs md:text-sm sm:text-xs pt-0 pb-0" 
                     type="date"
                     name = "tgl_lahir"
@@ -285,21 +292,13 @@ export default function HeaderForm(props) {
                     onChange={handleChange}/>
                 }
                 {
-                    props.isPrinting==false && get_data_automatis_pasien &&
-                    <div>{get_data.tgl_lahir}</div>
-                }
-                {
                     props.isPrinting &&
                     <div>{get_data.tgl_lahir}</div>
                 }
                 <div className="flex ml-1">/</div>
                 {
-                    props.isPrinting==false && get_data_automatis_pasien==false &&
+                    props.isPrinting==false &&
                     <div id="id_umur" className="flex items-center ml-1 mr-1">{get_data.umur}</div>
-                }
-                {
-                    props.isPrinting==false && get_data_automatis_pasien &&
-                    <div>{get_data.umur}</div>
                 }
                 {
                     props.isPrinting &&
@@ -309,7 +308,7 @@ export default function HeaderForm(props) {
             <div className="row-span-3">Alamat</div>
             <div className="row-span-3 col-span-2">
                 {
-                    props.isPrinting==false && get_data_automatis_pasien==false &&
+                    props.isPrinting==false &&
                     <div className="flex">
                     <div>:</div>
                     
@@ -343,7 +342,7 @@ export default function HeaderForm(props) {
                 <div className="flex">
                     <div>:</div>
                     {
-                    props.isPrinting==false && get_data_automatis_pasien==false &&
+                    props.isPrinting==false &&
                     <textarea className="w-full text-xs md:text-sm sm:text-xs" 
                         name = "alamat"
                         value={get_data.alamat}
@@ -351,21 +350,17 @@ export default function HeaderForm(props) {
                     />
                     }
                     {
-                    props.isPrinting==false && get_data_automatis_pasien && 
-                    <div>{get_data.alamat} kel.{get_kelurahan_identitas_pasien} kec.{get_kecamatan_identitas_pasien}</div>
-                    }
-                    {
                     props.isPrinting &&
                     <div>{get_data.alamat} kel.{get_kelurahan_identitas_pasien} kec.{get_kecamatan_identitas_pasien}</div>
                     }
                 </div>
             </div>
-            <div className="">No. Telepon</div>
+            <div >No. Telepon</div>
             <div className="col-span-2 h-7">
                 <div className="flex">
                     <div>:</div>
                     {
-                    props.isPrinting==false && get_data_automatis_pasien==false &&
+                    props.isPrinting==false &&
                     <input className="w-full text-xs md:text-sm sm:text-xs p-0" 
                         type="text"
                         name = "no_telepon"
@@ -374,16 +369,12 @@ export default function HeaderForm(props) {
                     />
                     }
                     {
-                    props.isPrinting==false && get_data_automatis_pasien &&
-                    <div>{get_data.no_telepon}</div>
-                    }
-                    {
                     props.isPrinting &&
                     <div>{get_data.no_telepon}</div>
                     }
                 </div>
             </div>
-            <div className="">Tgl Penanganan</div>
+            <div >Tgl Penanganan</div>
             <div className="col-span-2 h-7">
                 <div className="flex">
                     <div>:</div>

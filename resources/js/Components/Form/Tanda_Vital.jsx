@@ -277,9 +277,9 @@ export default function Tanda_Vital(props) {
                 {
                   props.isPrinting==false &&
                   <div className="relative">
-                    <LocalizationProvider className="" dateAdapter={AdapterDayjs}>
+                    <LocalizationProvider  dateAdapter={AdapterDayjs}>
                         {/* <MobileTimePicker className="text-sm" value={get_jam} onChange={(newValue) => set_jam(newValue)} ampm={false} /> */}
-                        <MobileTimePicker className="" name="c_pukul" value={get_data.c_pukul} onChange={handleChange} ampm={false} slotProps={{
+                        <MobileTimePicker  name="c_pukul" value={get_data.c_pukul} onChange={handleChange} ampm={false} slotProps={{
                                         textField: {
                                             size: "small",
                                         },

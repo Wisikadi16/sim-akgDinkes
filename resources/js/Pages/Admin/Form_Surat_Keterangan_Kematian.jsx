@@ -9,6 +9,8 @@ import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker';
 
 import {useReactToPrint} from 'react-to-print';
 import {router} from "@inertiajs/react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Form_Surat_Keterangan_Kematian(props) {
     const [nomor_surat, set_nomor_surat] = useState({
@@ -31,6 +33,7 @@ export default function Form_Surat_Keterangan_Kematian(props) {
     const [jam_meninggal, set_jam_meninggal] = React.useState(dayjs(new Date));
 
     const [identitas, set_identitas] = useState({
+        nik: '',
         nama :'',
         tempat_lahir : '',
         tgl_lahir : '',
@@ -139,6 +142,15 @@ export default function Form_Surat_Keterangan_Kematian(props) {
                 ["hari_meninggal"]:nama_hari[new Date(value).getDay()],
             });
         }
+        else if(e.target.name=="nik"){
+            const value = e.target.value;
+            if (/^\d*$/.test(value) && value.length <= 16) {
+                set_identitas({
+                    ...identitas,
+                    [e.target.name]: value,
+                });
+            }
+        }
         else{
             const value = e.target.value;
             set_identitas({
@@ -193,7 +205,8 @@ export default function Form_Surat_Keterangan_Kematian(props) {
     const oc_simpan = (e) => {
         console.log(e.preventDefault());
 
-        router.post('/simpan_form_surat_keterangan_kematian', {
+        axios.post(window.location.origin + '/form_surat_keterangan_kematian/simpan', {
+            nik: identitas.nik,
             no_surat_1:nomor_surat.no_1,
             no_surat_2:nomor_surat.no_2,
             no_surat_3:nomor_surat.no_3,
@@ -209,14 +222,17 @@ export default function Form_Surat_Keterangan_Kematian(props) {
             jam_meninggal:identitas.jam_meninggal,
             tgl_surat:identitas.tgl_surat,
             nama_ttd_dokter:identitas.nama_ttd_dokter,
-        })
-
-        alert('berhasil simpan')
+        }).then(response => {
+            toast.success('berhasil simpan', { position: toast.POSITION.TOP_RIGHT });
+        }).catch(err => {
+            toast.error('Gagal menyimpan: ' + (err.response?.data || err.message), { position: toast.POSITION.TOP_RIGHT });
+        });
 
     }
 
     return (
-        <div ref={ref_print}>
+        <div ref={ref_print} className="bg-white text-black p-4">
+            <ToastContainer />
             <HeaderFormSurat />
             <div className="flex justify-center font-bold text-[20px] underline mt-3">SURAT KETERANGAN KEMATIAN</div>
             <div className="flex justify-center mb-3">
@@ -269,6 +285,20 @@ export default function Form_Surat_Keterangan_Kematian(props) {
                             {
                                 isPrinting &&
                                 <div>{identitas.nama}</div>
+                            }
+                        </div>
+                    </div>
+                    <div className="flex">
+                        <div className="w-[25%]">NIK (16 Digit)</div>
+                        <div>:</div>
+                        <div className="w-[75%]">
+                            {
+                                isPrinting == false &&
+                                <input type="text" className="w-full p-0" name="nik" onChange={oc_identitas} value={identitas.nik || ''} maxLength="16" placeholder="Masukkan 16 digit NIK"></input>
+                            }
+                            {
+                                isPrinting &&
+                                <div>{identitas.nik}</div>
                             }
                         </div>
                     </div>

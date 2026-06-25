@@ -18,6 +18,8 @@ use App\Models\Surat_Persetujuan_Tindakan_Medis;
 use App\Models\Surat_Keterangan_Kematian;
 use DateTime;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
 
 class OrderController extends Controller
 {
@@ -130,104 +132,151 @@ class OrderController extends Controller
     }
 
     public function tambah(Request $request){
-        Order::create([
-            'cara_order' => $request->cara_order,
-            'id_petugas_user' => Auth::user()->id,
-            'nama_penelepon' => $request->nama_penelepon,
-            'nama_pasien' => $request->nama_pasien,
-            'no_penelepon' => $request->no_penelepon,
-            // 'nama_pasien' => $request->nama_pasien,
-            'kasus' => $request->kasus,
-            'alamat' => $request->alamat,
-            'kecamatan' => $request->kecamatan,
-            'kelurahan' => $request->kelurahan,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'id_tim_ambulan' => $request->id_tim_ambulan,
-            'waktu_order' => $request->waktu_order,
-            'status' => "belum diterima",
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
+                Order::create([
+                    'cara_order' => $request->cara_order,
+                    'id_petugas_user' => Auth::user()->id,
+                    'nama_penelepon' => $request->nama_penelepon ?? '-',
+                    'nama_pasien' => $request->nama_pasien,
+                    'nik_pasien' => $request->nik_pasien,
+                    'no_penelepon' => $request->no_penelepon ?? '-',
+                    'kasus' => $request->kasus ?? '-',
+                    'alamat' => $request->alamat ?? '-',
+                    'kecamatan' => $request->kecamatan ?? '-',
+                    'kelurahan' => $request->kelurahan ?? '-',
+                    'latitude' => $request->latitude ?? '-',
+                    'longitude' => $request->longitude ?? '-',
+                    'id_tim_ambulan' => empty($request->id_tim_ambulan) ? null : $request->id_tim_ambulan,
+                    'waktu_order' => $request->waktu_order,
+                    'status' => "belum diterima",
+                    'jenis_layanan' => $request->jenis_layanan ?? '-',
+                    'riwayat_alergi' => $request->riwayat_alergi ?? '-',
+                    //'status_bpjs' => $request->status_bpjs,
+                    //'status_kelas_bpjs' => $request->status_kelas_bpjs,
+                    'keterangan_lain' => $request->keterangan_lain ?? '-',
+                ]);
 
-        // return Redirect::route('dashboard.order');
-        return response()->json("Berhasil tambah order");
+                if (!empty($request->nik_pasien)) {
+                    Pasien::firstOrCreate(
+                        ['nik' => $request->nik_pasien],
+                        [
+                            'nama' => $request->nama_pasien,
+                            'alamat' => $request->alamat,
+                            'alamat_kecamatan' => $request->kecamatan,
+                            'alamat_kelurahan' => $request->kelurahan,
+                            'no_telepon' => $request->no_penelepon,
+                        ]
+                    );
+                }
+            });
+
+            return response()->json("Berhasil tambah order");
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     public function edit(Request $request)
     {
-        $order = Order::find($request->id);
+        try {
+            DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+                
+                if (!$order) {
+                    throw new \Exception("Data order tidak ditemukan atau ID kosong.");
+                }
 
-        $order->update([
-            'cara_order' => $request->cara_order,
-            'id_petugas_user' => Auth::user()->id,
-            'nama_penelepon' => $request->nama_penelepon,
-            'no_penelepon' => $request->no_penelepon,
-            'kasus' => $request->kasus,
-            'alamat' => $request->alamat,
-            'kecamatan' => $request->kecamatan,
-            'kelurahan' => $request->kelurahan,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'id_tim_ambulan' => $request->id_tim_ambulan,
-            'waktu_order' => $request->waktu_order,
-        ]);
+                $order->update([
+                    'cara_order' => $request->cara_order,
+                    'id_petugas_user' => Auth::user()->id,
+                    'nama_penelepon' => $request->nama_penelepon ?? '-',
+                    'nama_pasien' => $request->nama_pasien,
+                    'nik_pasien' => $request->nik_pasien,
+                    'no_penelepon' => $request->no_penelepon ?? '-',
+                    'kasus' => $request->kasus ?? '-',
+                    'alamat' => $request->alamat ?? '-',
+                    'kecamatan' => $request->kecamatan ?? '-',
+                    'kelurahan' => $request->kelurahan ?? '-',
+                    'latitude' => $request->latitude ?? '-',
+                    'longitude' => $request->longitude ?? '-',
+                    'id_tim_ambulan' => empty($request->id_tim_ambulan) ? null : $request->id_tim_ambulan,
+                    'waktu_order' => $request->waktu_order,
+                    'jenis_layanan' => $request->jenis_layanan ?? '-',
+                    'riwayat_alergi' => $request->riwayat_alergi ?? '-',
+                    //'status_bpjs' => $request->status_bpjs,
+                    //'status_kelas_bpjs' => $request->status_kelas_bpjs,
+                    'keterangan_lain' => $request->keterangan_lain ?? '-',
+                ]);
 
-        // return Redirect::route('dashboard.order');
-        return response()->json("Update berhasil");
+                if (!empty($request->nik_pasien)) {
+                    Pasien::firstOrCreate(
+                        ['nik' => $request->nik_pasien],
+                        [
+                            'nama' => $request->nama_pasien,
+                            'alamat' => $request->alamat,
+                            'alamat_kecamatan' => $request->kecamatan,
+                            'alamat_kelurahan' => $request->kelurahan,
+                            'no_telepon' => $request->no_penelepon,
+                        ]
+                    );
+                }
+            });
+
+            return response()->json("Update berhasil");
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     public function hapus(Request $request)
     {
-        // dd($request->id);
-        $order = Order::find($request->id);
-        $order->delete();
+        DB::transaction(function () use ($request) {
+            // dd($request->id);
+            $order = Order::find($request->id);
+            $order->delete();
+        });
 
         return Redirect::route('dashboard.order');
     }
 
     public function terima(Request $request)
     {
-        // $order = Order::find($request->id);
-        // // $waktu = new DateTime();
-        // $order->update([
-        //     'waktu_terima' => date('d/m/Y H:i'),
-        //     'status' => "sudah diterima",
-        // ]);
-
-        // return Redirect::route('dashboard.order');
-
         try {
-            $order = Order::find($request->id);
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if ($order !== null) {
-                $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
+                if ($order !== null) {
+                    $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
 
-                if ($tim_ambulan !== null) {
-                    $tim_ambulan->update(['status' => "sedang berjalan"]);
+                    if ($tim_ambulan !== null) {
+                        $tim_ambulan->update(['status' => "sedang berjalan"]);
 
-                    $order->update([
-                        'waktu_terima' => date('d/m/Y H:i'),
-                        'status' => "sudah diterima",
-                    ]);
+                        $order->update([
+                            'waktu_terima' => date('d/m/Y H:i'),
+                            'status' => "sudah diterima",
+                        ]);
 
-                    return response()->json([
-                        'status' => 'berhasil',
-                        'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
-                        'message' => 'Order berhasil diterima'
-                    ]);
+                        return response()->json([
+                            'status' => 'berhasil',
+                            'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
+                            'message' => 'Order berhasil diterima'
+                        ]);
+                    } else {
+                        return response()->json([
+                            'status' => 'error',
+                            'data' => null,
+                            'message' => 'Tim Ambulan tidak ditemukan'
+                        ], 404);
+                    }
                 } else {
                     return response()->json([
                         'status' => 'error',
                         'data' => null,
-                        'message' => 'Tim Ambulan tidak ditemukan'
+                        'message' => 'Order tidak ditemukan'
                     ], 404);
                 }
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -240,38 +289,40 @@ class OrderController extends Controller
     public function sampai_lokasi(Request $request)
     {
         try {
-            $order = Order::find($request->id);
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if ($order !== null) {
-                $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
+                if ($order !== null) {
+                    $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
 
-                if ($tim_ambulan !== null) {
-                    $tim_ambulan->update(['status' => "sedang berjalan"]);
+                    if ($tim_ambulan !== null) {
+                        $tim_ambulan->update(['status' => "sedang berjalan"]);
 
-                    $order->update([
-                        'waktu_sampai_lokasi' => date('d/m/Y H:i'),
-                        'status' => "sampai lokasi",
-                    ]);
+                        $order->update([
+                            'waktu_sampai_lokasi' => date('d/m/Y H:i'),
+                            'status' => "sampai lokasi",
+                        ]);
 
-                    return response()->json([
-                        'status' => 'berhasil',
-                        'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
-                        'message' => 'Sampai lokasi order'
-                    ]);
+                        return response()->json([
+                            'status' => 'berhasil',
+                            'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
+                            'message' => 'Sampai lokasi order'
+                        ]);
+                    } else {
+                        return response()->json([
+                            'status' => 'error',
+                            'data' => null,
+                            'message' => 'Tim Ambulan tidak ditemukan'
+                        ], 404);
+                    }
                 } else {
                     return response()->json([
                         'status' => 'error',
                         'data' => null,
-                        'message' => 'Tim Ambulan tidak ditemukan'
+                        'message' => 'Order tidak ditemukan'
                     ], 404);
                 }
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -283,275 +334,248 @@ class OrderController extends Controller
 
     public function selesai(Request $request)
     {
-        try{
-            $order = Order::find($request->id);
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if($order!=null){
-                $order->update([
-                    'waktu_selesai' => date('d/m/Y H:i'),
-                    'status' => "selesai penanganan",
-                ]);
-
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Order selesai'
-                ]);
-                // return response()->json($order);
-            }
-            else{
-                // return response()->json("Error");
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'data' => null,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-        // $order = Order::find($request->id);
-
-        // // dd(date('d-m-Y H:i'));
-        // $order->update([
-        //     'waktu_selesai' => date('d/m/Y H:i'),
-        //     'status' => "selesai",
-        // ]);
-
-        // return Redirect::route('dashboard.order');
-    }
-
-    public function bersiap_kembali(Request $request)
-    {
-        try{
-            // $tim_ambulan = Tim_Ambulan::where('id_admin', $request->id_admin)->first();
-
-            $order = Order::find($request->id);
-            $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
-
-            if($order!=null && $tim_ambulan!=null){
-                $tim_ambulan->update([
-                    'status' => "bersiap",
-                ]);
-                $order->update([
-                    'waktu_bersiap_kembali' => date('d/m/Y H:i'),
-                    'status' => "selesai",
-                ]);
-
-                // return response()->json(["tim_ambulan"=>$tim_ambulan, "order"=>$order]);
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
-                    'message' => 'Ambulan bersiap kembali'
-                ]);
-            }
-            else{
-                // return response()->json("Error");
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'data' => null,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-
-    }
-
-    public function catatan(Request $request)
-    {
-        try{
-            $order = Order::find($request->id);
-
-            if($order!=null){
-                $order->update([
-                    'catatan' => $request->catatan,
-                ]);
-
-                // return response()->json($order);
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Catatan berhasil diubah'
-                ]);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-                // return response()->json("Error");
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'data' => null,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-
-    }
-
-    public function ajukan_rujuk(Request $request)
-    {
-        try{
-            $order = Order::find($request->id);
-
-            if($order!=null){
-                $order->update([
-                    'waktu_ajukan_rujuk' => date('d/m/Y H:i'),
-                    'status' => "ajukan rujuk",
-                ]);
-
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Order ajukan rujuk'
-                ]);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'data' => null,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-
-    }
-
-    public function rujuk(Request $request)
-    {
-        try{
-            $order = Order::find($request->id);
-
-            if($order!=null){
-                $order->update([
-                    'waktu_rujuk' => date('d/m/Y H:i'),
-                    'status' => "rujuk",
-                    // 'status' => "sudah dirujuk",
-                    // 'faskes_rujukan' => $request->faskes_rujukan,
-                ]);
-
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    // 'message' => 'Order sudah dirujuk'
-                    'message' => 'Order rujuk'
-                ]);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'data' => null,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-
-    }
-
-    public function sampai_rujuk(Request $request)
-    {
-        try{
-            $order = Order::find($request->id);
-
-            if($order!=null){
-                $order->update([
-                    'waktu_sampai_rujuk' => date('d/m/Y H:i'),
-                    'status' => "sampai rujuk",
-                ]);
-
-                // return response()->json($order);
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Order sampai rujuk'
-                ]);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-                // return response()->json("Error");
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'data' => null,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-
-    }
-
-    public function batal(Request $request)
-    {
-        try{
-            $order = Order::find($request->id);
-
-            if($order!=null){
-                $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
-
-                if ($tim_ambulan !== null) {
-                    $tim_ambulan->update(['status' => "non aktif"]);
-
+                if ($order != null) {
                     $order->update([
-                        'waktu_terima' => date('d/m/Y H:i'),
-                        'status' => "batal",
+                        'waktu_selesai' => date('d/m/Y H:i'),
+                        'status' => "selesai penanganan",
                     ]);
 
                     return response()->json([
                         'status' => 'berhasil',
-                        'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
-                        'message' => 'Order dibatalkan'
+                        'data' => ['order' => $order],
+                        'message' => 'Order selesai'
                     ]);
                 } else {
                     return response()->json([
                         'status' => 'error',
                         'data' => null,
-                        'message' => 'Tim Ambulan tidak ditemukan'
+                        'message' => 'Order tidak ditemukan'
                     ], 404);
                 }
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 
-                // $order->update([
-                //     'status' => "batal",
-                // ]);
+    public function bersiap_kembali(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+                $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
 
-                // return response()->json($order);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-                // return response()->json("Error");
-            }
+                if ($order != null && $tim_ambulan != null) {
+                    $tim_ambulan->update([
+                        'status' => "bersiap",
+                    ]);
+                    $order->update([
+                        'waktu_bersiap_kembali' => date('d/m/Y H:i'),
+                        'status' => "selesai",
+                    ]);
+
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
+                        'message' => 'Ambulan bersiap kembali'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function catatan(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+
+                if ($order != null) {
+                    $order->update([
+                        'catatan' => $request->catatan,
+                    ]);
+
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Catatan berhasil diubah'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function ajukan_rujuk(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+
+                if ($order != null) {
+                    $order->update([
+                        'waktu_ajukan_rujuk' => date('d/m/Y H:i'),
+                        'status' => "ajukan rujuk",
+                    ]);
+
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Order ajukan rujuk'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function rujuk(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+
+                if ($order != null) {
+                    $order->update([
+                        'waktu_rujuk' => date('d/m/Y H:i'),
+                        'status' => "rujuk",
+                    ]);
+
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Order rujuk'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sampai_rujuk(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+
+                if ($order != null) {
+                    $order->update([
+                        'waktu_sampai_rujuk' => date('d/m/Y H:i'),
+                        'status' => "sampai rujuk",
+                    ]);
+
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Order sampai rujuk'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function batal(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+
+                if ($order != null) {
+                    $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
+
+                    if ($tim_ambulan !== null) {
+                        $tim_ambulan->update(['status' => "non aktif"]);
+
+                        $order->update([
+                            'waktu_terima' => date('d/m/Y H:i'),
+                            'status' => "batal",
+                        ]);
+
+                        return response()->json([
+                            'status' => 'berhasil',
+                            'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
+                            'message' => 'Order dibatalkan'
+                        ]);
+                    } else {
+                        return response()->json([
+                            'status' => 'error',
+                            'data' => null,
+                            'message' => 'Tim Ambulan tidak ditemukan'
+                        ], 404);
+                    }
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -612,38 +636,40 @@ class OrderController extends Controller
     public function api_terima(Request $request)
     {
         try {
-            $order = Order::find($request->id);
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if ($order !== null) {
-                $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
+                if ($order !== null) {
+                    $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
 
-                if ($tim_ambulan !== null) {
-                    $tim_ambulan->update(['status' => "sedang berjalan"]);
+                    if ($tim_ambulan !== null) {
+                        $tim_ambulan->update(['status' => "sedang berjalan"]);
 
-                    $order->update([
-                        'waktu_terima' => date('d/m/Y H:i'),
-                        'status' => "sudah diterima",
-                    ]);
+                        $order->update([
+                            'waktu_terima' => date('d/m/Y H:i'),
+                            'status' => "sudah diterima",
+                        ]);
 
-                    return response()->json([
-                        'status' => 'berhasil',
-                        'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
-                        'message' => 'Order berhasil diterima'
-                    ]);
+                        return response()->json([
+                            'status' => 'berhasil',
+                            'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
+                            'message' => 'Order berhasil diterima'
+                        ]);
+                    } else {
+                        return response()->json([
+                            'status' => 'error',
+                            'data' => null,
+                            'message' => 'Tim Ambulan tidak ditemukan'
+                        ], 404);
+                    }
                 } else {
                     return response()->json([
                         'status' => 'error',
                         'data' => null,
-                        'message' => 'Tim Ambulan tidak ditemukan'
+                        'message' => 'Order tidak ditemukan'
                     ], 404);
                 }
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -656,30 +682,29 @@ class OrderController extends Controller
 
     public function api_selesai(Request $request)
     {
-        try{
-            $order = Order::find($request->id);
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if($order!=null){
-                $order->update([
-                    'waktu_selesai' => date('d/m/Y H:i'),
-                    'status' => "selesai penanganan",
-                ]);
+                if ($order != null) {
+                    $order->update([
+                        'waktu_selesai' => date('d/m/Y H:i'),
+                        'status' => "selesai penanganan",
+                    ]);
 
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Order selesai'
-                ]);
-                // return response()->json($order);
-            }
-            else{
-                // return response()->json("Error");
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Order selesai'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -692,47 +717,41 @@ class OrderController extends Controller
 
     public function api_batal(Request $request)
     {
-        try{
-            $order = Order::find($request->id);
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if($order!=null){
-                $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
+                if ($order != null) {
+                    $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
 
-                if ($tim_ambulan !== null) {
-                    $tim_ambulan->update(['status' => "non aktif"]);
+                    if ($tim_ambulan !== null) {
+                        $tim_ambulan->update(['status' => "non aktif"]);
 
-                    $order->update([
-                        'waktu_terima' => date('d/m/Y H:i'),
-                        'status' => "batal",
-                    ]);
+                        $order->update([
+                            'waktu_terima' => date('d/m/Y H:i'),
+                            'status' => "batal",
+                        ]);
 
-                    return response()->json([
-                        'status' => 'berhasil',
-                        'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
-                        'message' => 'Order dibatalkan'
-                    ]);
+                        return response()->json([
+                            'status' => 'berhasil',
+                            'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
+                            'message' => 'Order dibatalkan'
+                        ]);
+                    } else {
+                        return response()->json([
+                            'status' => 'error',
+                            'data' => null,
+                            'message' => 'Tim Ambulan tidak ditemukan'
+                        ], 404);
+                    }
                 } else {
                     return response()->json([
                         'status' => 'error',
                         'data' => null,
-                        'message' => 'Tim Ambulan tidak ditemukan'
+                        'message' => 'Order tidak ditemukan'
                     ], 404);
                 }
-
-                // $order->update([
-                //     'status' => "batal",
-                // ]);
-
-                // return response()->json($order);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-                // return response()->json("Error");
-            }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -740,46 +759,33 @@ class OrderController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
-        // $order = Order::find($request->id);
-
-        // if($order!=null){
-        //     $order->update([
-        //         'status' => "batal",
-        //     ]);
-
-        //     return response()->json($order);
-        // }
-        // else{
-        //     return response()->json("Error");
-        // }
     }
 
     public function api_rujuk(Request $request)
     {
-        try{
-            $order = Order::find($request->id);
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if($order!=null){
-                $order->update([
-                    'waktu_rujuk' => date('d/m/Y H:i'),
-                    'status' => "rujuk",
-                ]);
+                if ($order != null) {
+                    $order->update([
+                        'waktu_rujuk' => date('d/m/Y H:i'),
+                        'status' => "rujuk",
+                    ]);
 
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Order rujuk'
-                ]);
-                // return response()->json($order);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-                // return response()->json("Error");
-            }
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Order rujuk'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -792,30 +798,29 @@ class OrderController extends Controller
 
     public function api_sampai_rujuk(Request $request)
     {
-        try{
-            $order = Order::find($request->id);
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if($order!=null){
-                $order->update([
-                    'waktu_sampai_rujuk' => date('d/m/Y H:i'),
-                    'status' => "sampai rujuk",
-                ]);
+                if ($order != null) {
+                    $order->update([
+                        'waktu_sampai_rujuk' => date('d/m/Y H:i'),
+                        'status' => "sampai rujuk",
+                    ]);
 
-                // return response()->json($order);
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Order sampai rujuk'
-                ]);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-                // return response()->json("Error");
-            }
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Order sampai rujuk'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -828,36 +833,33 @@ class OrderController extends Controller
 
     public function api_bersiap_kembali(Request $request)
     {
-        try{
-            // $tim_ambulan = Tim_Ambulan::where('id_admin', $request->id_admin)->first();
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
+                $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
 
-            $order = Order::find($request->id);
-            $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
+                if ($order != null && $tim_ambulan != null) {
+                    $tim_ambulan->update([
+                        'status' => "bersiap",
+                    ]);
+                    $order->update([
+                        'waktu_bersiap_kembali' => date('d/m/Y H:i'),
+                        'status' => "selesai",
+                    ]);
 
-            if($order!=null && $tim_ambulan!=null){
-                $tim_ambulan->update([
-                    'status' => "bersiap",
-                ]);
-                $order->update([
-                    'waktu_bersiap_kembali' => date('d/m/Y H:i'),
-                    'status' => "selesai",
-                ]);
-
-                // return response()->json(["tim_ambulan"=>$tim_ambulan, "order"=>$order]);
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
-                    'message' => 'Ambulan bersiap kembali'
-                ]);
-            }
-            else{
-                // return response()->json("Error");
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-            }
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order, 'tim_ambulan' => $tim_ambulan],
+                        'message' => 'Ambulan bersiap kembali'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -870,29 +872,28 @@ class OrderController extends Controller
 
     public function api_catatan(Request $request)
     {
-        try{
-            $order = Order::find($request->id);
+        try {
+            return DB::transaction(function () use ($request) {
+                $order = Order::find($request->id);
 
-            if($order!=null){
-                $order->update([
-                    'catatan' => $request->catatan,
-                ]);
+                if ($order != null) {
+                    $order->update([
+                        'catatan' => $request->catatan,
+                    ]);
 
-                // return response()->json($order);
-                return response()->json([
-                    'status' => 'berhasil',
-                    'data' => ['order' => $order],
-                    'message' => 'Catatan berhasil diubah'
-                ]);
-            }
-            else{
-                return response()->json([
-                    'status' => 'error',
-                    'data' => null,
-                    'message' => 'Order tidak ditemukan'
-                ], 404);
-                // return response()->json("Error");
-            }
+                    return response()->json([
+                        'status' => 'berhasil',
+                        'data' => ['order' => $order],
+                        'message' => 'Catatan berhasil diubah'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'data' => null,
+                        'message' => 'Order tidak ditemukan'
+                    ], 404);
+                }
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',

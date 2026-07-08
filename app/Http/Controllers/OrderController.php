@@ -633,13 +633,25 @@ class OrderController extends Controller
         }
     }
 
-    public function api_terima(Request $request)
+   public function api_terima(Request $request)
     {
         try {
             return DB::transaction(function () use ($request) {
                 $order = Order::find($request->id);
 
                 if ($order !== null) {
+                    
+                    // --- TAMBAHKAN PENGECEKAN STATUS DI SINI ---
+                    // Jika statusnya sudah berubah jadi "sudah diterima", tolak request ini!
+                    if ($order->status === 'sudah diterima') {
+                        return response()->json([
+                            'status' => 'error',
+                            'data' => null,
+                            'message' => 'Gagal: Order ini sudah diterima sebelumnya!'
+                        ], 422);
+                    }
+                    // -------------------------------------------
+
                     $tim_ambulan = Tim_Ambulan::find($order->id_tim_ambulan);
 
                     if ($tim_ambulan !== null) {
@@ -677,7 +689,6 @@ class OrderController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
-
     }
 
     public function api_selesai(Request $request)

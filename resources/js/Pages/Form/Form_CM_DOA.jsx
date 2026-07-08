@@ -24,6 +24,8 @@ export default function Form_CM_DOA(props) {
         petugas_perawat: "",
         petugas_bidan: "",
         petugas_driver: "",
+        petugas_nakes_1: "",
+        petugas_nakes_2: "",
         kondisi_kritis: [],
         jalan_napas: [],
         pernafasan: [],
@@ -195,6 +197,7 @@ export default function Form_CM_DOA(props) {
                 })
                 .then((response) => {
                     const row = response.data;
+                    console.log("✅ Data Form CM DOA loaded:", row);  // DEBUG
                     if (row) {
                         const parseJSON = (val, fallback) => {
                             if (Array.isArray(val)) return val;
@@ -210,90 +213,100 @@ export default function Form_CM_DOA(props) {
                                 return fallback;
                             }
                         };
+                        
+                        /* HELPER: Normalize semua field dari API response
+                           Pastikan tidak ada field yang null/undefined saat set ke state */
+                        const normalizeField = (val, defaultVal = "") => {
+                            if (val === null || val === undefined) return defaultVal;
+                            return val;
+                        };
+                        
                         setData({
                             id: id,
-                            nama_pasien: row.nama_pasien || "",
-                            ttl: row.ttl || "",
+                            nama_pasien: normalizeField(row.nama_pasien),
+                            ttl: normalizeField(row.ttl),
                             jenis_kelamin: row.jenis_kelamin || "L",
-                            nik: row.nik || "",
-                            alamat: row.alamat || "",
-                            no_telepon: row.no_telepon || "",
-                            nama_tim: row.nama_tim || "",
-                            petugas_dokter: row.petugas_dokter || "",
-                            petugas_perawat: row.petugas_perawat || "",
-                            petugas_bidan: row.petugas_bidan || "",
-                            petugas_driver: row.petugas_driver || "",
+                            nik: normalizeField(row.nik),
+                            alamat: normalizeField(row.alamat),
+                            no_telepon: normalizeField(row.no_telepon),
+                            nama_tim: normalizeField(row.nama_tim),
+                            petugas_dokter: normalizeField(row.petugas_dokter),
+                            petugas_perawat: normalizeField(row.petugas_perawat),
+                            petugas_bidan: normalizeField(row.petugas_bidan),
+                            petugas_driver: normalizeField(row.petugas_driver),
+                            petugas_nakes_1: normalizeField(row.petugas_nakes_1),
+                            petugas_nakes_2: normalizeField(row.petugas_nakes_2),
                             kondisi_kritis: parseJSON(row.kondisi_kritis, []),
                             jalan_napas: parseJSON(row.jalan_napas, []),
                             pernafasan: parseJSON(row.pernafasan, []),
                             sirkulasi: parseJSON(row.sirkulasi, []),
                             eksposur: parseJSON(row.eksposur, []),
                             kesimpulan_awal: parseJSON(row.kesimpulan_awal, []),
-                            gcs_e: row.gcs_e || "",
-                            gcs_v: row.gcs_v || "",
-                            gcs_m: row.gcs_m || "",
-                            pupil: row.pupil || "",
-                            reflek_cahaya: row.reflek_cahaya || "",
-                            lateralisasi: row.lateralisasi || "",
-                            td: row.td || "",
-                            hr: row.hr || "",
-                            rr: row.rr || "",
-                            suhu: row.suhu || "",
-                            spo2: row.spo2 || "",
-                            skala_nyeri: row.skala_nyeri || "",
-                            pukul: row.pukul || "",
-                            fu_td: row.fu_td || "",
-                            fu_hr: row.fu_hr || "",
-                            fu_rr: row.fu_rr || "",
-                            fu_suhu: row.fu_suhu || "",
-                            fu_spo2: row.fu_spo2 || "",
-                            fu_skala_nyeri: row.fu_skala_nyeri || "",
-                            fu_pukul: row.fu_pukul || "",
-                            keluhan_utama: row.keluhan_utama || "",
-                            riwayat_sekarang: row.riwayat_sekarang || "",
+                            gcs_e: normalizeField(row.gcs_e),
+                            gcs_v: normalizeField(row.gcs_v),
+                            gcs_m: normalizeField(row.gcs_m),
+                            pupil: normalizeField(row.pupil),
+                            reflek_cahaya: normalizeField(row.reflek_cahaya),
+                            lateralisasi: normalizeField(row.lateralisasi),
+                            td: normalizeField(row.td),
+                            hr: normalizeField(row.hr),
+                            rr: normalizeField(row.rr),
+                            suhu: normalizeField(row.suhu),
+                            spo2: normalizeField(row.spo2),
+                            skala_nyeri: normalizeField(row.skala_nyeri),
+                            pukul: normalizeField(row.pukul),
+                            fu_td: normalizeField(row.fu_td),
+                            fu_hr: normalizeField(row.fu_hr),
+                            fu_rr: normalizeField(row.fu_rr),
+                            fu_suhu: normalizeField(row.fu_suhu),
+                            fu_spo2: normalizeField(row.fu_spo2),
+                            fu_skala_nyeri: normalizeField(row.fu_skala_nyeri),
+                            fu_pukul: normalizeField(row.fu_pukul),
+                            keluhan_utama: normalizeField(row.keluhan_utama),
+                            riwayat_sekarang: normalizeField(row.riwayat_sekarang),
                             riwayat_dahulu: parseJSON(row.riwayat_dahulu, []),
-                            riwayat_keluarga: row.riwayat_keluarga || "",
-                            riwayat_obat: row.riwayat_obat || "",
-                            pf_normocephal: row.pf_normocephal || "",
-                            pf_sclera_ikterik_1: row.pf_sclera_ikterik_1 || "",
-                            pf_sclera_ikterik_2: row.pf_sclera_ikterik_2 || "",
-                            pf_conj_anemis_1: row.pf_conj_anemis_1 || "",
-                            pf_conj_anemis_2: row.pf_conj_anemis_2 || "",
+                            riwayat_keluarga: normalizeField(row.riwayat_keluarga),
+                            riwayat_obat: normalizeField(row.riwayat_obat),
+                            pf_normocephal: normalizeField(row.pf_normocephal),
+                            pf_sclera_ikterik_1: normalizeField(row.pf_sclera_ikterik_1),
+                            pf_sclera_ikterik_2: normalizeField(row.pf_sclera_ikterik_2),
+                            pf_conj_anemis_1: normalizeField(row.pf_conj_anemis_1),
+                            pf_conj_anemis_2: normalizeField(row.pf_conj_anemis_2),
                             pf_perbesaran_kelenjar_getah_bening:
-                                row.pf_perbesaran_kelenjar_getah_bening || "",
-                            pf_deviasi_trachea: row.pf_deviasi_trachea || "",
+                                normalizeField(row.pf_perbesaran_kelenjar_getah_bening),
+                            pf_deviasi_trachea: normalizeField(row.pf_deviasi_trachea),
                             pf_suara_dasar_veikuler_1:
-                                row.pf_suara_dasar_veikuler_1 || "",
+                                normalizeField(row.pf_suara_dasar_veikuler_1),
                             pf_suara_dasar_veikuler_2:
-                                row.pf_suara_dasar_veikuler_2 || "",
-                            pf_rhonki_1: row.pf_rhonki_1 || "",
-                            pf_rhonki_2: row.pf_rhonki_2 || "",
-                            pf_wheezing_1: row.pf_wheezing_1 || "",
-                            pf_wheezing_2: row.pf_wheezing_2 || "",
+                                normalizeField(row.pf_suara_dasar_veikuler_2),
+                            pf_rhonki_1: normalizeField(row.pf_rhonki_1),
+                            pf_rhonki_2: normalizeField(row.pf_rhonki_2),
+                            pf_wheezing_1: normalizeField(row.pf_wheezing_1),
+                            pf_wheezing_2: normalizeField(row.pf_wheezing_2),
                             pf_bunyi_jantung_1_2:
-                                row.pf_bunyi_jantung_1_2 || "",
+                                normalizeField(row.pf_bunyi_jantung_1_2),
                             pf_bunyi_jantung_1_2_status:
-                                row.pf_bunyi_jantung_1_2_status || "",
-                            pf_bising_usus: row.pf_bising_usus || "",
+                                normalizeField(row.pf_bunyi_jantung_1_2_status),
+                            pf_bising_usus: normalizeField(row.pf_bising_usus),
                             pf_bising_usus_status:
-                                row.pf_bising_usus_status || "",
+                                normalizeField(row.pf_bising_usus_status),
                             pf_nyeri_tekan_abdomen:
-                                row.pf_nyeri_tekan_abdomen || "",
+                                normalizeField(row.pf_nyeri_tekan_abdomen),
                             pf_nyeri_tekan_abdomen_area:
-                                row.pf_nyeri_tekan_abdomen_area || "",
-                            pf_akral_hangat_a_1: row.pf_akral_hangat_a_1 || "",
-                            pf_akral_hangat_a_2: row.pf_akral_hangat_a_2 || "",
-                            pf_akral_hangat_b_1: row.pf_akral_hangat_b_1 || "",
-                            pf_akral_hangat_b_2: row.pf_akral_hangat_b_2 || "",
-                            pf_oedema_a_1: row.pf_oedema_a_1 || "",
-                            pf_oedema_a_2: row.pf_oedema_a_2 || "",
-                            pf_oedema_b_1: row.pf_oedema_b_1 || "",
-                            pf_oedema_b_2: row.pf_oedema_b_2 || "",
-                            ekg: row.ekg || "",
-                            gds: row.gds || "",
-                            au: row.au || "",
-                            chol: row.chol || "",
-                            hb: row.hb || "",
+                                normalizeField(row.pf_nyeri_tekan_abdomen_area),
+                            pf_akral_hangat_a_1: normalizeField(row.pf_akral_hangat_a_1),
+                            pf_akral_hangat_a_2: normalizeField(row.pf_akral_hangat_a_2),
+                            pf_akral_hangat_b_1: normalizeField(row.pf_akral_hangat_b_1),
+                            pf_akral_hangat_b_2: normalizeField(row.pf_akral_hangat_b_2),
+                            pf_oedema_a_1: normalizeField(row.pf_oedema_a_1),
+                            pf_oedema_a_2: normalizeField(row.pf_oedema_a_2),
+                            pf_oedema_b_1: normalizeField(row.pf_oedema_b_1),
+                            pf_oedema_b_2: normalizeField(row.pf_oedema_b_2),
+                            ekg: normalizeField(row.ekg),
+                            gds: normalizeField(row.gds),
+                            au: normalizeField(row.au),
+                            chol: normalizeField(row.chol),
+                            hb: normalizeField(row.hb),
                             diagnosis_medis: parseJSON(row.diagnosis_medis, [
                                 "",
                                 "",
@@ -308,20 +321,20 @@ export default function Form_CM_DOA(props) {
                                 "",
                                 "",
                             ]),
-                            rs_rujukan: row.rs_rujukan || "",
-                            tgl_rujukan: row.tgl_rujukan || "",
-                            jam_rujukan: row.jam_rujukan || "",
-                            nama_petugas: row.nama_petugas || "",
-                            nama_keluarga: row.nama_keluarga || "",
+                            rs_rujukan: normalizeField(row.rs_rujukan),
+                            tgl_rujukan: normalizeField(row.tgl_rujukan),
+                            jam_rujukan: normalizeField(row.jam_rujukan),
+                            nama_petugas: normalizeField(row.nama_petugas),
+                            nama_keluarga: normalizeField(row.nama_keluarga),
                         });
                         set_identitas_pasien({
                             id: "",
-                            nik: row.nik || "",
-                            nama: row.nama_pasien || "",
-                            tgl_lahir: (row.ttl || "").split("/")[0] || "",
-                            umur: (row.ttl || "").split("/")[1] || "",
-                            alamat: row.alamat || "",
-                            no_telepon: row.no_telepon || "",
+                            nik: normalizeField(row.nik),
+                            nama: normalizeField(row.nama_pasien),
+                            tgl_lahir: (normalizeField(row.ttl)).split("/")[0] || "",
+                            umur: (normalizeField(row.ttl)).split("/")[1] || "",
+                            alamat: normalizeField(row.alamat),
+                            no_telepon: normalizeField(row.no_telepon),
                             tgl_penanganan: row.created_at
                                 ? row.created_at.split("T")[0]
                                 : new Date().toISOString().split("T")[0],
@@ -355,7 +368,10 @@ export default function Form_CM_DOA(props) {
                         }
                     }
                 })
-                .catch((err) => console.log(err));
+                .catch((err) => {
+                    console.error("❌ Gagal load Form CM DOA:", err);
+                    console.error("Error response:", err.response?.data);
+                });
         }
     }, [id, get_data_icd_10?.length]);
     const [daftarRS, setDaftarRS] = useState([]);
@@ -480,7 +496,7 @@ export default function Form_CM_DOA(props) {
                     {""}
                     {/* SUB TITLE & TEAMS (MODERNIZED) */}
                     {""}
-                    <div className="text-center font-bold text-sm md:text-base sm:text-sm mb-2 print:mb-1 uppercase border-solid border-2 p-2 print:p-1 bg-gray-100 shadow-sm">
+                    <div className="text-center font-bold text-sm md:text-base sm:text-sm mb-2 print:mb-1 uppercase border border-black p-1 p-2 print:p-1 bg-gray-100 shadow-sm">
                         {""}
                         ASESMEN GAWAT DARURAT{""}
                     </div>
@@ -492,22 +508,33 @@ export default function Form_CM_DOA(props) {
                             onSubmit={(timData) => {
                                 setData({
                                     ...data,
-                                    nama_tim: timData.tim,
-                                    petugas_dokter: timData.dokter,
-                                    petugas_perawat: timData.perawat,
-                                    petugas_bidan: timData.bidan,
-                                    petugas_driver: timData.driver,
+                                    nama_tim: timData.tim || "",
+                                    petugas_dokter: timData.dokter || "",
+                                    petugas_perawat: timData.perawat || "",
+                                    petugas_bidan: timData.bidan || "",
+                                    petugas_driver: timData.driver || "",
+                                    petugas_nakes_1: timData.nakes_1 || "",
+                                    petugas_nakes_2: timData.nakes_2 || "",
                                 });
                             }}
                             auth={props.auth}
                             id_form={id}
+                            initialData={{
+                                tim: data.nama_tim || "",
+                                dokter: data.petugas_dokter || "",
+                                perawat: data.petugas_perawat || "",
+                                bidan: data.petugas_bidan || "",
+                                driver: data.petugas_driver || "",
+                                nakes_1: data.petugas_nakes_1 || "",
+                                nakes_2: data.petugas_nakes_2 || "",
+                            }}
                         />
                         {""}
                     </div>
                     {""}
                     {/* SECTION I SURVEI PRIMER */}
                     {""}
-                    <div className="border-solid border-2 mb-1 flex text-sm">
+                    <div className="border border-black p-1 mb-1 flex text-sm">
                         {""}
                         <div className="w-[22%] p-2 print:p-1 border-r border-black font-bold flex flex-col bg-gray-50">
                             {""}
@@ -522,7 +549,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-0 flex-1 border-0 border-b border-dotted border-gray-300 outline-none text-center bg-transparent focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.td}
+                                        value={data.td || ""}
                                         onChange={(e) =>
                                             setData("td", e.target.value)
                                         }
@@ -538,7 +565,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-0 flex-1 border-0 border-b border-dotted border-gray-300 outline-none text-center bg-transparent focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.hr}
+                                        value={data.hr || ""}
                                         onChange={(e) =>
                                             setData("hr", e.target.value)
                                         }
@@ -554,7 +581,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-0 flex-1 border-0 border-b border-dotted border-gray-300 outline-none text-center bg-transparent focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.rr}
+                                        value={data.rr || ""}
                                         onChange={(e) =>
                                             setData("rr", e.target.value)
                                         }
@@ -571,7 +598,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-0 flex-1 border-0 border-b border-dotted border-gray-300 outline-none text-center bg-transparent focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.suhu}
+                                        value={data.suhu || ""}
                                         onChange={(e) =>
                                             setData("suhu", e.target.value)
                                         }
@@ -588,7 +615,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-0 flex-1 border-0 border-b border-dotted border-gray-300 outline-none text-center bg-transparent focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.spo2}
+                                        value={data.spo2 || ""}
                                         onChange={(e) =>
                                             setData("spo2", e.target.value)
                                         }
@@ -603,7 +630,7 @@ export default function Form_CM_DOA(props) {
                                     Skala Nyeri:{""}
                                     <input
                                         className="w-0 flex-1 border-0 border-b border-dotted border-gray-300 outline-none ml-2 text-center bg-transparent font-bold focus:ring-0 transition-all shadow-none"
-                                        value={data.skala_nyeri}
+                                        value={data.skala_nyeri || ""}
                                         onChange={(e) =>
                                             setData(
                                                 "skala_nyeri",
@@ -617,7 +644,7 @@ export default function Form_CM_DOA(props) {
                                     Pukul:{""}
                                     <input
                                         className="w-0 flex-1 border-0 border-b border-gray-300 outline-none ml-2 text-center bg-transparent text-sm focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.pukul}
+                                        value={data.pukul || ""}
                                         onChange={(e) =>
                                             setData("pukul", e.target.value)
                                         }
@@ -873,7 +900,7 @@ export default function Form_CM_DOA(props) {
                                             </span>
                                             <input
                                                 className="w-8 border-0 border-b border-gray-300 outline-none text-center bg-transparent focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                                value={data.gcs_e}
+                                                value={data.gcs_e || ""}
                                                 onChange={(e) =>
                                                     setData(
                                                         "gcs_e",
@@ -887,7 +914,7 @@ export default function Form_CM_DOA(props) {
                                             </span>
                                             <input
                                                 className="w-8 border-0 border-b border-gray-300 outline-none text-center bg-transparent focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                                value={data.gcs_v}
+                                                value={data.gcs_v || ""}
                                                 onChange={(e) =>
                                                     setData(
                                                         "gcs_v",
@@ -901,7 +928,7 @@ export default function Form_CM_DOA(props) {
                                             </span>
                                             <input
                                                 className="w-8 border-0 border-b border-gray-300 outline-none text-center bg-transparent focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                                value={data.gcs_m}
+                                                value={data.gcs_m || ""}
                                                 onChange={(e) =>
                                                     setData(
                                                         "gcs_m",
@@ -916,7 +943,7 @@ export default function Form_CM_DOA(props) {
                                             Pupil:{""}
                                             <input
                                                 className="flex-1 w-0 border-0 border-b border-gray-300 outline-none ml-2 bg-transparent focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                                value={data.pupil}
+                                                value={data.pupil || ""}
                                                 onChange={(e) =>
                                                     setData(
                                                         "pupil",
@@ -930,7 +957,7 @@ export default function Form_CM_DOA(props) {
                                             Reflek Cahaya:{""}
                                             <input
                                                 className="flex-1 w-0 border-0 border-b border-gray-300 outline-none ml-2 bg-transparent focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                                value={data.reflek_cahaya}
+                                                value={data.reflek_cahaya || ""}
                                                 onChange={(e) =>
                                                     setData(
                                                         "reflek_cahaya",
@@ -944,7 +971,7 @@ export default function Form_CM_DOA(props) {
                                             Lateralisasi:{""}
                                             <input
                                                 className="flex-1 w-0 border-0 border-b border-gray-300 outline-none ml-2 bg-transparent focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                                value={data.lateralisasi}
+                                                value={data.lateralisasi || ""}
                                                 onChange={(e) =>
                                                     setData(
                                                         "lateralisasi",
@@ -1052,7 +1079,7 @@ export default function Form_CM_DOA(props) {
                     {""}
                     {/* SECTION II RIWAYAT KESEHATAN */}
                     {""}
-                    <div className="border-solid border-2 mb-1 flex flex-col leading-tight shadow-sm bg-white print:break-inside-avoid">
+                    <div className="border border-black p-1 mb-1 flex flex-col leading-tight shadow-sm bg-white print:break-inside-avoid">
                         {""}
                         <div className="text-center font-bold bg-gray-200 border-b border-black p-2 print:p-1 w-full text-sm md:text-base sm:text-sm tracking-widest uppercase">
                             II. RIWAYAT KESEHATAN
@@ -1068,7 +1095,7 @@ export default function Form_CM_DOA(props) {
                                 {""}
                                 <input
                                     className="w-full outline-none bg-transparent border-0 border-b border-dotted border-gray-300 font-bold text-sm focus:border-blue-500 focus:ring-0 transition-all shadow-none"
-                                    value={data.keluhan_utama}
+                                    value={data.keluhan_utama || ""}
                                     onChange={(e) =>
                                         setData("keluhan_utama", e.target.value)
                                     }
@@ -1088,7 +1115,7 @@ export default function Form_CM_DOA(props) {
                                 {""}
                                 <textarea
                                     className="w-full min-h-[50px] outline-none resize-none p-1 leading-normal border-0 border-b border-dotted border-gray-300 rounded-none focus:border-blue-500 transition-all bg-transparent text-sm font-bold focus:ring-0 shadow-none"
-                                    value={data.riwayat_sekarang}
+                                    value={data.riwayat_sekarang || ""}
                                     onChange={(e) =>
                                         setData(
                                             "riwayat_sekarang",
@@ -1155,7 +1182,7 @@ export default function Form_CM_DOA(props) {
                                 {""}
                                 <input
                                     className="w-full outline-none bg-transparent border-0 border-b border-dotted border-gray-300 font-bold text-sm focus:border-blue-500 focus:ring-0 transition-all shadow-none"
-                                    value={data.riwayat_keluarga}
+                                    value={data.riwayat_keluarga || ""}
                                     onChange={(e) =>
                                         setData(
                                             "riwayat_keluarga",
@@ -1178,7 +1205,7 @@ export default function Form_CM_DOA(props) {
                                 {""}
                                 <input
                                     className="w-full outline-none bg-transparent border-0 border-b border-dotted border-gray-300 font-bold text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                    value={data.riwayat_obat}
+                                    value={data.riwayat_obat || ""}
                                     onChange={(e) =>
                                         setData("riwayat_obat", e.target.value)
                                     }
@@ -1192,7 +1219,7 @@ export default function Form_CM_DOA(props) {
                     {""}
                     {/* SECTION III PEMERIKSAAN FISIK DAN PENUNJANG */}
                     {""}
-                    <div className="border-solid border-2 mb-1 flex flex-col shadow-sm bg-white print:break-inside-avoid">
+                    <div className="border border-black p-1 mb-1 flex flex-col shadow-sm bg-white print:break-inside-avoid">
                         {""}
                         <div className="text-center font-bold bg-gray-200 border-b border-black p-2 print:p-1 w-full text-sm md:text-base sm:text-sm tracking-widest uppercase">
                             {""}
@@ -1267,7 +1294,7 @@ export default function Form_CM_DOA(props) {
                                                     className="w-8 border-b border-gray-300 text-center focus:ring-0 p-0"
                                                     type="text"
                                                     name="normocephal"
-                                                    value={data.pf_normocephal}
+                                                    value={data.pf_normocephal || ""}
                                                     onChange={(e) =>
                                                         setData(
                                                             "pf_" +
@@ -1737,7 +1764,7 @@ export default function Form_CM_DOA(props) {
                                                     className="w-10 border-b border-gray-300 text-center p-0"
                                                     type="text"
                                                     name="bising_usus"
-                                                    value={data.pf_bising_usus}
+                                                    value={data.pf_bising_usus || ""}
                                                     onChange={(e) =>
                                                         setData(
                                                             "pf_" +
@@ -2149,7 +2176,7 @@ export default function Form_CM_DOA(props) {
                     {""}
                     {/* SECTION IV, V & FOLLOW UP */}
                     {""}
-                    <div className="flex w-full gap-0 border-solid border-2 mb-1 shadow-sm text-sm bg-white print:break-inside-avoid">
+                    <div className="flex w-full gap-0 border border-black p-1 mb-1 shadow-sm text-sm bg-white print:break-inside-avoid">
                         {""}
                         {/* DIAGNOSIS MEDIS */}
                         {""}
@@ -2297,7 +2324,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-24 border-0 border-b-[2px] border-gray-400 border-dotted outline-none text-center bg-transparent text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.fu_td}
+                                        value={data.fu_td || ""}
                                         onChange={(e) =>
                                             setData("fu_td", e.target.value)
                                         }
@@ -2317,7 +2344,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-24 border-0 border-b-[2px] border-gray-400 border-dotted outline-none text-center bg-transparent text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.fu_hr}
+                                        value={data.fu_hr || ""}
                                         onChange={(e) =>
                                             setData("fu_hr", e.target.value)
                                         }
@@ -2337,7 +2364,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-24 border-0 border-b-[2px] border-gray-400 border-dotted outline-none text-center bg-transparent text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.fu_rr}
+                                        value={data.fu_rr || ""}
                                         onChange={(e) =>
                                             setData("fu_rr", e.target.value)
                                         }
@@ -2357,7 +2384,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-24 border-0 border-b-[2px] border-gray-400 border-dotted outline-none text-center bg-transparent text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.fu_suhu}
+                                        value={data.fu_suhu || ""}
                                         onChange={(e) =>
                                             setData("fu_suhu", e.target.value)
                                         }
@@ -2377,7 +2404,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-24 border-0 border-b-[2px] border-gray-400 border-dotted outline-none text-center bg-transparent text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.fu_spo2}
+                                        value={data.fu_spo2 || ""}
                                         onChange={(e) =>
                                             setData("fu_spo2", e.target.value)
                                         }
@@ -2397,7 +2424,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-24 border-0 border-b-[2px] border-gray-400 border-dotted outline-none text-center bg-transparent text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.fu_skala_nyeri}
+                                        value={data.fu_skala_nyeri || ""}
                                         onChange={(e) =>
                                             setData(
                                                 "fu_skala_nyeri",
@@ -2418,7 +2445,7 @@ export default function Form_CM_DOA(props) {
                                     {""}
                                     <input
                                         className="w-24 border-0 border-b-[2px] border-gray-400 border-dotted outline-none text-center bg-transparent text-sm focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
-                                        value={data.fu_pukul}
+                                        value={data.fu_pukul || ""}
                                         onChange={(e) =>
                                             setData("fu_pukul", e.target.value)
                                         }
@@ -2440,7 +2467,7 @@ export default function Form_CM_DOA(props) {
                     {""}
                     <div className="flex w-full text-xs items-stretch gap-3 print:gap-1.5 pb-2 print:pb-0 mt-2 print:mt-0.5 print:break-inside-avoid">
                         {""}
-                        <div className="flex-1 p-3 print:p-2 bg-gray-50 border-solid border-2 rounded-sm shadow-inner overflow-hidden">
+                        <div className="flex-1 p-3 print:p-2 bg-gray-50 border border-black p-1 rounded-sm shadow-inner overflow-hidden">
                             {""}
                             <div className="font-bold border-b border-blue-800 mb-2 print:mb-1 pb-1 tracking-widest uppercase text-blue-900 text-sm">
                                 RUMAH SAKIT RUJUKAN
@@ -2484,7 +2511,7 @@ export default function Form_CM_DOA(props) {
                                     <input
                                         className="border-0 border-b border-dotted border-gray-300 flex-1 bg-transparent outline-none focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
                                         type="date"
-                                        value={data.tgl_rujukan}
+                                        value={data.tgl_rujukan || ""}
                                         onChange={(e) =>
                                             setData(
                                                 "tgl_rujukan",
@@ -2502,7 +2529,7 @@ export default function Form_CM_DOA(props) {
                                     <input
                                         className="border-0 border-b border-dotted border-gray-300 flex-1 bg-transparent outline-none focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none"
                                         type="time"
-                                        value={data.jam_rujukan}
+                                        value={data.jam_rujukan || ""}
                                         onChange={(e) =>
                                             setData(
                                                 "jam_rujukan",
@@ -2549,7 +2576,7 @@ export default function Form_CM_DOA(props) {
                                 type="text"
                                 className="w-[80%] border-0 border-b border-gray-300 text-center outline-none bg-transparent font-bold py-0 text-xs focus:border-blue-500 focus:ring-0 transition-all shadow-none"
                                 placeholder="(Nama Terang)"
-                                value={data.nama_petugas}
+                                value={data.nama_petugas || ""}
                                 onChange={(e) =>
                                     setData("nama_petugas", e.target.value)
                                 }
@@ -2590,7 +2617,7 @@ export default function Form_CM_DOA(props) {
                                 type="text"
                                 className="w-[80%] border-0 border-b border-gray-300 text-center outline-none bg-transparent font-bold py-0 text-xs focus:border-blue-500 focus:ring-0 transition-all shadow-none"
                                 placeholder="(Nama Terang)"
-                                value={data.nama_keluarga}
+                                value={data.nama_keluarga || ""}
                                 onChange={(e) =>
                                     setData("nama_keluarga", e.target.value)
                                 }

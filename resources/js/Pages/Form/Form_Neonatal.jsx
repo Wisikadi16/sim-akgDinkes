@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-
+import axios from "axios";
 import HeaderLogo from "@/Components/Headers/HeaderLogo";
 import Identitas_Tim from "@/Components/Form/Identitas_Tim";
 
@@ -104,6 +104,7 @@ export default function Form_Neonatal(props) {
         useState([]);
     const [get_data_icd_10, set_data_icd_10] = useState([]);
     const [get_data_icd_9, set_data_icd_9] = useState([]);
+    const [daftarRS, setDaftarRS] = useState([]);
 
     useEffect(() => {
         axios
@@ -135,6 +136,15 @@ export default function Form_Neonatal(props) {
             .then(function (response) {
                 set_data_icd_9(response.data);
             });
+
+        axios
+            .post(window.location.origin + "/ref_faskes", {
+                jenis: "rumah sakit",
+            })
+            .then(function (response) {
+                setDaftarRS(response.data);
+            })
+            .catch((error) => console.log("Gagal memuat data RS:", error));
 
         if (props.id != null) {
             const parseJSON = (val, fallback) => {
@@ -179,17 +189,19 @@ export default function Form_Neonatal(props) {
                         jenis_kelamin: responseData.pasien.jenis_kelamin,
                     }));
 
-                    const split_jam_lahir =
-                        responseData.pasien.jam_lahir.split(":");
-                    const tgl_lahir_jam = new Date(
-                        responseData.pasien.tgl_lahir +
-                            " " +
-                            responseData.pasien.jam_lahir,
-                    );
-                    const dayjs_tgl_lahir = dayjs(tgl_lahir_jam)
-                        .hour(split_jam_lahir[0])
-                        .minute(split_jam_lahir[1]);
-                    set_jam_lahir_identitas_bayi(dayjs_tgl_lahir);
+                    if (responseData.pasien.jam_lahir) {
+                        const split_jam_lahir =
+                            responseData.pasien.jam_lahir.split(":");
+                        const tgl_lahir_jam = new Date(
+                            responseData.pasien.tgl_lahir +
+                                " " +
+                                responseData.pasien.jam_lahir,
+                        );
+                        const dayjs_tgl_lahir = dayjs(tgl_lahir_jam)
+                            .hour(split_jam_lahir[0])
+                            .minute(split_jam_lahir[1]);
+                        set_jam_lahir_identitas_bayi(dayjs_tgl_lahir);
+                    }
 
                     //identitas tim ambulan
                     set_identitas_tim_ambulance((prevState) => {
@@ -288,7 +300,7 @@ export default function Form_Neonatal(props) {
                             if (key.includes("rsr_")) {
                                 const key_baru = key.replace(/rsr_/, "");
 
-                                if (key_baru == "jam") {
+                                if (key_baru == "jam" && responseData.rsr_jam) {
                                     const split_jam =
                                         responseData.rsr_jam.split(":");
                                     const tgl_jam = new Date(
@@ -334,6 +346,13 @@ export default function Form_Neonatal(props) {
                             }
                         }, 500);
                     }
+                })
+                .catch(function (error) {
+                    console.log("Gagal memuat data form neonatal:", error);
+                    toast.error(
+                        "Gagal memuat data form. Silakan muat ulang halaman.",
+                        { position: "top-right" },
+                    );
                 });
         }
     }, []);
@@ -675,7 +694,7 @@ export default function Form_Neonatal(props) {
     };
 
     const oe_ttd_petugas_rs_keluarga_pasien = () => {
-        set_ttd_keluarga_pasien_petugas_rs(
+        set_ttd_petugas_rs_keluarga_pasien(
             ref_ttd_petugas_rs_keluarga_pasien.current.toDataURL(),
         );
         // ref_ttd_petugas_ambulance.current.fromDataURL(get_ttd_petugas_ambulance)
@@ -730,6 +749,8 @@ export default function Form_Neonatal(props) {
                 ita_id_tim: identitas_tim_ambulance.id,
                 ita_tim: identitas_tim_ambulance.tim,
                 ita_dokter: identitas_tim_ambulance.dokter,
+                ita_nakes1: identitas_tim_ambulance.nakes1,
+                ita_nakes2: identitas_tim_ambulance.nakes2,
                 ita_perawat: identitas_tim_ambulance.perawat,
                 ita_bidan: identitas_tim_ambulance.bidan,
                 ita_driver: identitas_tim_ambulance.driver,
@@ -964,16 +985,17 @@ export default function Form_Neonatal(props) {
                     </div>
                 </div>
                 <div className={isPrinting ? "ml-3 mr-3" : "ml-0 mr-0"}>
-                    <div className="grid grid-cols-5 mt-3 text-xxs md:text-sm sm:text-xs">
-                        <div>
+                    <div className="w-full mt-3 text-xxs md:text-sm sm:text-xs">
+                        <div className="mb-2 print:mb-1">
                             <Identitas_Tim
                                 isPrinting={isPrinting}
                                 onSubmit={os_identitas_tim_ambulance}
                                 auth={props.auth}
                                 id_form={id_form}
+                                initialData={identitas_tim_ambulance}
                             />
                         </div>
-                        <div className="col-start-2 col-end-6">
+                        <div className="">
                             <div className="border-solid border-2 font-bold text-center">
                                 ASESMEN BAYI BARU LAHIR (NEONATUS)
                             </div>
@@ -2731,17 +2753,26 @@ export default function Form_Neonatal(props) {
                                         </div>
                                         <div className="w-[60%]">
                                             {isPrinting == false && (
-                                                <input
-                                                    className="w-full p-0"
-                                                    type="text"
-                                                    name="faskes"
-                                                    onChange={
-                                                        oc_rumah_sakit_rujukan
-                                                    }
-                                                    value={
-                                                        rumah_sakit_rujukan.faskes
-                                                    }
-                                                ></input>
+                                                <>
+                                                    <input
+                                                        className="w-full p-0"
+                                                        type="text"
+                                                        name="faskes"
+                                                        list="rs_rujukan_neonatal_list"
+                                                        placeholder="Pilih/ketik RS atau Puskesmas..."
+                                                        onChange={
+                                                            oc_rumah_sakit_rujukan
+                                                        }
+                                                        value={
+                                                            rumah_sakit_rujukan.faskes
+                                                        }
+                                                    ></input>
+                                                    <datalist id="rs_rujukan_neonatal_list">
+                                                        {daftarRS.map((opts, i) => (
+                                                            <option key={i} value={opts.nama} />
+                                                        ))}
+                                                    </datalist>
+                                                </>
                                             )}
                                             {isPrinting && (
                                                 <div>

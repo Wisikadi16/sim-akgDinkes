@@ -32,27 +32,18 @@ class FormCmDoaController extends Controller
                 return response($validator->errors()->first(), 422);
             }
         }
-
-        return \DB::transaction(function () use ($request) {
-            $nik = $request->nik;
-            if ($nik === null || $nik === '') {
-                $cari_pasien_non_nik = Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
-                if($cari_pasien_non_nik==null){
-                    $nik = "NON-1";
-                } else {
-                    $get_nik = $cari_pasien_non_nik->nik;
-                    $get_nomor = substr($get_nik, strlen("NON-"));
-                    $nik = "NON-".((int)$get_nomor + 1);
-                }
-                $pasien = Pasien::create([
-                    'nik' => $nik,
-                    'nama' => $request->nama_pasien,
-                    'alamat' => $request->alamat,
-                    'no_telepon' => $request->no_telepon,
-                ]);
-            } else {
-                $pasien = Pasien::where('nik', $nik)->first();
-                if ($pasien == null) {
+        try{ 
+            return \DB::transaction(function () use ($request) {
+                $nik = $request->nik;
+                if ($nik === null || $nik === '') {
+                    $cari_pasien_non_nik = Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
+                    if($cari_pasien_non_nik==null){
+                        $nik = "NON-1";
+                    } else {
+                        $get_nik = $cari_pasien_non_nik->nik;
+                        $get_nomor = substr($get_nik, strlen("NON-"));
+                        $nik = "NON-".((int)$get_nomor + 1);
+                    }
                     $pasien = Pasien::create([
                         'nik' => $nik,
                         'nama' => $request->nama_pasien,
@@ -60,39 +51,52 @@ class FormCmDoaController extends Controller
                         'no_telepon' => $request->no_telepon,
                     ]);
                 } else {
-                    $pasien->update([
-                        'nama' => $request->nama_pasien,
-                        'alamat' => $request->alamat,
-                        'no_telepon' => $request->no_telepon,
-                    ]);
+                    $pasien = Pasien::where('nik', $nik)->first();
+                    if ($pasien == null) {
+                        $pasien = Pasien::create([
+                            'nik' => $nik,
+                            'nama' => $request->nama_pasien,
+                            'alamat' => $request->alamat,
+                            'no_telepon' => $request->no_telepon,
+                        ]);
+                    } else {
+                        $pasien->update([
+                            'nama' => $request->nama_pasien,
+                            'alamat' => $request->alamat,
+                            'no_telepon' => $request->no_telepon,
+                        ]);
+                    }
                 }
-            }
 
-            $form_doa = FormCmDoa::create(array_merge($request->except(['id', 'id_form']), [
-                'nik' => $nik,
-                'kondisi_kritis' => is_array($request->kondisi_kritis) ? json_encode($request->kondisi_kritis) : $request->kondisi_kritis,
-                'jalan_napas' => is_array($request->jalan_napas) ? json_encode($request->jalan_napas) : $request->jalan_napas,
-                'pernafasan' => is_array($request->pernafasan) ? json_encode($request->pernafasan) : $request->pernafasan,
-                'sirkulasi' => is_array($request->sirkulasi) ? json_encode($request->sirkulasi) : $request->sirkulasi,
-                'eksposur' => is_array($request->eksposur) ? json_encode($request->eksposur) : $request->eksposur,
-                'kesimpulan_awal' => is_array($request->kesimpulan_awal) ? json_encode($request->kesimpulan_awal) : $request->kesimpulan_awal,
-                'riwayat_dahulu' => is_array($request->riwayat_dahulu) ? json_encode($request->riwayat_dahulu) : $request->riwayat_dahulu,
-                'diagnosis_medis' => is_array($request->diagnosis_medis) ? json_encode($request->diagnosis_medis) : $request->diagnosis_medis,
-                'terapi_tindakan' => is_array($request->terapi_tindakan) ? json_encode($request->terapi_tindakan) : $request->terapi_tindakan,
-            ]));
+                $form_doa = FormCmDoa::create(array_merge($request->except(['id', 'id_form']), [
+                    'nik' => $nik,
+                    'kondisi_kritis' => is_array($request->kondisi_kritis) ? json_encode($request->kondisi_kritis) : $request->kondisi_kritis,
+                    'jalan_napas' => is_array($request->jalan_napas) ? json_encode($request->jalan_napas) : $request->jalan_napas,
+                    'pernafasan' => is_array($request->pernafasan) ? json_encode($request->pernafasan) : $request->pernafasan,
+                    'sirkulasi' => is_array($request->sirkulasi) ? json_encode($request->sirkulasi) : $request->sirkulasi,
+                    'eksposur' => is_array($request->eksposur) ? json_encode($request->eksposur) : $request->eksposur,
+                    'kesimpulan_awal' => is_array($request->kesimpulan_awal) ? json_encode($request->kesimpulan_awal) : $request->kesimpulan_awal,
+                    'riwayat_dahulu' => is_array($request->riwayat_dahulu) ? json_encode($request->riwayat_dahulu) : $request->riwayat_dahulu,
+                    'diagnosis_medis' => is_array($request->diagnosis_medis) ? json_encode($request->diagnosis_medis) : $request->diagnosis_medis,
+                    'terapi_tindakan' => is_array($request->terapi_tindakan) ? json_encode($request->terapi_tindakan) : $request->terapi_tindakan,
+                ]));
 
-            $form = Form::create([
-                'id_form' => $form_doa->id,
-                'id_pasien' => $pasien->id,
-                'id_pembuat' => Auth::check() ? Auth::id() : 1,
-                'tgl_penanganan' => date('Y-m-d'),
-                'jenis' => 'Form CM DOA' 
-            ]);
+                $form = Form::create([
+                    'id_form' => $form_doa->id,
+                    'id_pasien' => $pasien->id,
+                    'id_pembuat' => Auth::check() ? Auth::id() : 1,
+                    'tgl_penanganan' => date('Y-m-d'),
+                    'jenis' => 'Form CM DOA' 
+                ]);
 
-            $form_doa->update(['id_form' => $form->id]);
+                $form_doa->update(['id_form' => $form->id]);
 
-            return response()->json("Berhasil simpan data");
-        });
+                return response()->json("Berhasil simpan data");
+            });
+        } catch (\Exception $e) {
+            \Log::error('Error pada Form CM DOA: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal simpan data. Silahkan coba lagi.'], 500);
+        }
     }
 
     public function ref_form_cm_doa(Request $request)

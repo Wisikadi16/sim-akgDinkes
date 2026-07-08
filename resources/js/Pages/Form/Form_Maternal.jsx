@@ -519,8 +519,7 @@ export default function Form_Maternal(props) {
                     <HeaderFormMaternal />
                 </div>
                 <div className="grid grid-cols-2 text-xs md:text-sm sm:text-xs">
-                    {/* <Identitas_Tim onSubmit={getDataIdentitas}/> */}
-                    <div className="flex justify-center">RUJUKAN MATERNAL</div>
+                    <div className="flex justify-center w-[50%]">RUJUKAN MATERNAL</div>
                     <div className="mr-3 col-start-2 col-end-6">
                         <div className="flex">
                             <div className="w-[50%]">Nama Pasien</div>
@@ -672,32 +671,27 @@ export default function Form_Maternal(props) {
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 border-2 text-xs md:text-sm sm:text-xs">
-                    <div>
-                        <div className="flex justify-center border-2">
-                            Petugas Pendamping
-                        </div>
-                        <div>Dokter</div>
-                        <div>Perawat</div>
-                        <div>Bidan</div>
-                        <div>Driver</div>
-                    </div>
-
-                    <div>
-                        <div className="flex justify-center border-2">Nama</div>
-                        <div>
-                            <input type="text" name="dokter" value={petugasPendamping.dokter} onChange={(e) => handleObjectChange(e, petugasPendamping, setPetugasPendamping)} className="p-0 w-full"></input>
-                        </div>
-                        <div>
-                            <input type="text" name="perawat" value={petugasPendamping.perawat} onChange={(e) => handleObjectChange(e, petugasPendamping, setPetugasPendamping)} className="p-0 w-full"></input>
-                        </div>
-                        <div>
-                            <input type="text" name="bidan" value={petugasPendamping.bidan} onChange={(e) => handleObjectChange(e, petugasPendamping, setPetugasPendamping)} className="p-0 w-full"></input>
-                        </div>
-                        <div>
-                            <input type="text" name="driver" value={petugasPendamping.driver} onChange={(e) => handleObjectChange(e, petugasPendamping, setPetugasPendamping)} className="p-0 w-full"></input>
-                        </div>
-                    </div>
+                <div className="w-full mb-2 print:mb-1 mt-2">
+                    <Identitas_Tim
+                        isPrinting={isPrinting}
+                        onSubmit={(timData) => {
+                            setPetugasPendamping({
+                                ...petugasPendamping,
+                                dokter: timData.dokter,
+                                perawat: timData.nakes_1,
+                                bidan: timData.nakes_2,
+                                driver: timData.driver,
+                            });
+                        }}
+                        auth={props.auth}
+                        id_form={props.id}
+                        initialData={{
+                            dokter: petugasPendamping.dokter,
+                            nakes_1: petugasPendamping.perawat,
+                            nakes_2: petugasPendamping.bidan,
+                            driver: petugasPendamping.driver,
+                        }}
+                    />
                 </div>
                 <div className="border-2 font-bold text-xs md:text-sm sm:text-xs">
                     KONDISI SAAT INI

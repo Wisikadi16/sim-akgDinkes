@@ -643,7 +643,7 @@ export default function Form_Surat_Keterangan_Kematian(props) {
                             <div className="flex justify-center">
                                 Dokter Ambulance Hebat
                             </div>
-                            <div>
+                            <div className="h-24 border-b">
                                 <SignatureCanvas
                                     canvasProps={{
                                         className: "sigCanvas w-full h-full",

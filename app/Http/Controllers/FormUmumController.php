@@ -51,156 +51,176 @@ class FormUmumController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($request) {
-            $nik = $request->nik;
+        // ===============================================
+        // INI JARING PENGAMANNYA (TRY)
+        // ===============================================
+        try {
+            return DB::transaction(function () use ($request) {
+                $nik = $request->nik;
 
-            if ($nik === null || $nik === '') {
-                $cari_pasien_non_nik = Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
-                if($cari_pasien_non_nik==null){
-                    $nik = "NON-1";
-                }
-                else{
-                    $get_nik = $cari_pasien_non_nik->nik;
-                    $get_nomor = substr($get_nik, strlen("NON-"));
-                    $nik = "NON-".((int)$get_nomor + 1);
-                }
-                $pasien = Pasien::create([
-                    'nik' => $nik,
-                    'nama' => $request->nama_pasien,
-                    'tgl_lahir' => $request->tgl_lahir,
-                    'alamat' => $request->alamat,
-                    'alamat_kelurahan' => $request->alamat_kelurahan,
-                    'alamat_kecamatan' => $request->alamat_kecamatan,
-                    'no_telepon' => $request->no_telepon,
-                ]);
-            }
-            else{
-                $pasien = Pasien::where('nik', $request->nik)->first();
-                if($pasien==null){
+                if ($nik === null || $nik === '') {
+                    $cari_pasien_non_nik = Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
+                    if($cari_pasien_non_nik==null){
+                        $nik = "NON-1";
+                    }
+                    else{
+                        $get_nik = $cari_pasien_non_nik->nik;
+                        $get_nomor = substr($get_nik, strlen("NON-"));
+                        $nik = "NON-".((int)$get_nomor + 1);
+                    }
                     $pasien = Pasien::create([
-                        'nik' => $request->nik,
+                        'nik' => $nik,
                         'nama' => $request->nama_pasien,
                         'tgl_lahir' => $request->tgl_lahir,
                         'alamat' => $request->alamat,
                         'alamat_kelurahan' => $request->alamat_kelurahan,
                         'alamat_kecamatan' => $request->alamat_kecamatan,
                         'no_telepon' => $request->no_telepon,
+                    
                     ]);
                 }
                 else{
-                    $pasien->update([
-                        'nama' => $request->nama_pasien,
-                        'tgl_lahir' => $request->tgl_lahir,
-                        'alamat' => $request->alamat,
-                        'alamat_kelurahan' => $request->alamat_kelurahan,
-                        'alamat_kecamatan' => $request->alamat_kecamatan,
-                        'no_telepon' => $request->no_telepon,
-                    ]);
+                    $pasien = Pasien::where('nik', $request->nik)->first();
+                    if($pasien==null){
+                        $pasien = Pasien::create([
+                            'nik' => $request->nik,
+                            'nama' => $request->nama_pasien,
+                            'tgl_lahir' => $request->tgl_lahir,
+                            'alamat' => $request->alamat,
+                            'alamat_kelurahan' => $request->alamat_kelurahan,
+                            'alamat_kecamatan' => $request->alamat_kecamatan,
+                            'no_telepon' => $request->no_telepon,
+                        ]);
+                    }
+                    else{
+                        $pasien->update([
+                            'nama' => $request->nama_pasien,
+                            'tgl_lahir' => $request->tgl_lahir,
+                            'alamat' => $request->alamat,
+                            'alamat_kelurahan' => $request->alamat_kelurahan,
+                            'alamat_kecamatan' => $request->alamat_kecamatan,
+                            'no_telepon' => $request->no_telepon,
+                        ]);
+                    }
                 }
-            }
-        
-            $form_umum = Form_Umum::create([
-                'id_pasien' => $pasien->id,
-                'tgl_penanganan'=> $request->tgl_penanganan ? date('Y-m-d', strtotime($request->tgl_penanganan)) : null,
-                'ita_tim'=> $request->ita_tim,
-                'ita_dokter'=> $request->ita_dokter,
-                'ita_perawat'=> $request->ita_perawat,
-                'ita_bidan'=> $request->ita_bidan,
-                'ita_driver'=> $request->ita_driver,
-                'kondisi_kritis'=> json_encode($request->kondisi_kritis),
-                'jalan_nafas'=> json_encode($request->jalan_nafas),
-                'pernafasan'=> json_encode($request->pernafasan),
-                'sirkulasi_nadi'=> json_encode($request->sirkulasi_nadi),
-                'sirkulasi_kulit'=> json_encode($request->sirkulasi_kulit),
-                'tv_td'=> $request->tv_td,
-                'tv_hr'=> $request->tv_hr,
-                'tv_rr'=> $request->tv_rr,
-                'tv_sh'=> $request->tv_sh,
-                'tv_spo2'=> $request->tv_spo2,
-                'tv_skala_nyeri'=> $request->tv_skala_nyeri,
-                'tv_pukul'=> $request->tv_pukul,
-                'ds_gcs_e'=> $request->ds_gcs_e,
-                'ds_gcs_m'=> $request->ds_gcs_m,
-                'ds_gcs_v'=> $request->ds_gcs_v,
-                'ds_pupil'=> $request->ds_pupil,
-                'ds_reflek_cahaya'=> $request->ds_reflek_cahaya,
-                'ds_lateralisasi'=> $request->ds_lateralisasi,
-                'eksposur'=> json_encode($request->eksposur),
-                'kesimpulan_awal'=> json_encode($request->kesimpulan_awal),
-                'rk_keluhan_utama'=> $request->rk_keluhan_utama,
-                'rk_riwayat_penyakit_sekarang'=> $request->rk_riwayat_penyakit_sekarang,
-                'rk_riwayat_penyakit_dahulu'=> json_encode($request->rk_riwayat_penyakit_dahulu),
-                'rk_riwayat_penyakit_keluarga'=> $request->rk_riwayat_penyakit_keluarga,
-                'rk_riwayat_minum_obat'=> $request->rk_riwayat_minum_obat,
-                'pf_normocephal'=> $request->pf_normocephal,
-                'pf_sclera_ikterik_1'=> $request->pf_sclera_ikterik_1,
-                'pf_sclera_ikterik_2'=> $request->pf_sclera_ikterik_2,
-                'pf_conj_anemis_1'=> $request->pf_conj_anemis_1,
-                'pf_conj_anemis_2'=> $request->pf_conj_anemis_2,
-                'pf_perbesaran_kelenjar_getah_bening'=> $request->pf_perbesaran_kelenjar_getah_bening,
-                'pf_deviasi_trachea'=> $request->pf_deviasi_trachea,
-                'pf_suara_dasar_veikuler_1'=> $request->pf_suara_dasar_veikuler_1,
-                'pf_suara_dasar_veikuler_2'=> $request->pf_suara_dasar_veikuler_2,
-                'pf_rhonki_1'=> $request->pf_rhonki_1,
-                'pf_rhonki_2'=> $request->pf_rhonki_2,
-                'pf_wheezing_1'=> $request->pf_wheezing_1,
-                'pf_wheezing_2'=> $request->pf_wheezing_2,
-                'pf_bunyi_jantung_1_2'=> $request->pf_bunyi_jantung_1_2,
-                'pf_bunyi_jantung_1_2_status'=> $request->pf_bunyi_jantung_1_2_status,
-                'pf_bising_usus'=> $request->pf_bising_usus,
-                'pf_bising_usus_status' => $request->pf_bising_usus_status,
-                'pf_nyeri_tekan_abdomen'=> $request->pf_nyeri_tekan_abdomen,
-                'pf_nyeri_tekan_abdomen_area'=> $request->pf_nyeri_tekan_abdomen_area,
-                'pf_akral_hangat_a_1'=> $request->pf_akral_hangat_a_1,
-                'pf_akral_hangat_a_2'=> $request->pf_akral_hangat_a_2,
-                'pf_akral_hangat_b_1'=> $request->pf_akral_hangat_b_1,
-                'pf_akral_hangat_b_2'=> $request->pf_akral_hangat_b_2,
-                'pf_oedema_a_1'=> $request->pf_oedema_a_1,
-                'pf_oedema_a_2'=> $request->pf_oedema_a_2,
-                'pf_oedema_b_1'=> $request->pf_oedema_b_1,
-                'pf_oedema_b_2'=> $request->pf_oedema_b_2,
-                'pf_ekg'=> $request->pf_ekg,
-                'pf_gds'=> $request->pf_gds,
-                'pf_au'=> $request->pf_au,
-                'pf_chol'=> $request->pf_chol,
-                'pf_hb'=> $request->pf_hb,
-                'diagnosis_medis'=> json_encode($request->diagnosis_medis),
-                'terapi_tindakan_konsul'=> json_encode($request->terapi_tindakan_konsul),
-                'terapi_tindakan_konsul_dr'=> $request->terapi_tindakan_konsul_dr,
-                'ftv_td'=> $request->ftv_td,
-                'ftv_hr'=> $request->ftv_hr,
-                'ftv_rr'=> $request->ftv_rr,
-                'ftv_sh'=> $request->ftv_sh,
-                'ftv_spo2'=> $request->ftv_spo2,
-                'ftv_nrm'=> $request->ftv_nrm,
-                'ftv_gds'=> $request->ftv_gds,
-                'ftv_skala_nyeri'=> $request->ftv_skala_nyeri,
-                'ftv_pukul'=> $request->ftv_pukul,
-                'rsr_rs'=> $request->rsr_rs,
-                'rsr_tgl'=> $request->rsr_tgl,
-                'rsr_jam'=> $request->rsr_jam,
-                'nama_ttd_petugas_ambulance_hebat'=> $request->nama_ttd_petugas_ambulance_hebat,
-                'ttd_petugas_ambulance_hebat'=> $request->ttd_petugas_ambulance_hebat,
-                'keluarga_pasien_petugas_rs'=> $request->keluarga_pasien_petugas_rs,
-                'nama_ttd_keluarga_pasien_petugas_rs'=> $request->nama_ttd_keluarga_pasien_petugas_rs,
-                'ttd_keluarga_pasien_petugas_rs'=> $request->ttd_keluarga_pasien_petugas_rs,
-            ]);
+            
+                $form_umum = Form_Umum::create([
+                    'id_pasien' => $pasien->id,
+                    'tgl_penanganan'=> $request->tgl_penanganan ? date('Y-m-d', strtotime($request->tgl_penanganan)) : null,
+                    'ita_tim'=> $request->ita_tim,
+                    'ita_dokter'=> $request->ita_dokter,
+                    'ita_perawat'=> $request->ita_perawat,
+                    'ita_bidan'=> $request->ita_bidan,
+                    'ita_driver'=> $request->ita_driver,
+                    'ita_nakes_1' => $request->ita_nakes_1 ?? '-',
+                    'ita_nakes_2' => $request->ita_nakes_2 ?? '-',
+                    'kondisi_kritis'=> json_encode($request->kondisi_kritis),
+                    'jalan_nafas'=> json_encode($request->jalan_nafas),
+                    'pernafasan'=> json_encode($request->pernafasan),
+                    'sirkulasi_nadi'=> json_encode($request->sirkulasi_nadi),
+                    'sirkulasi_kulit'=> json_encode($request->sirkulasi_kulit),
+                    'tv_td'=> $request->tv_td,
+                    'tv_hr'=> $request->tv_hr,
+                    'tv_rr'=> $request->tv_rr,
+                    'tv_sh'=> $request->tv_sh,
+                    'tv_spo2'=> $request->tv_spo2,
+                    'tv_skala_nyeri'=> $request->tv_skala_nyeri,
+                    'tv_pukul'=> $request->tv_pukul,
+                    'ds_gcs_e'=> $request->ds_gcs_e,
+                    'ds_gcs_m'=> $request->ds_gcs_m,
+                    'ds_gcs_v'=> $request->ds_gcs_v,
+                    'ds_pupil'=> $request->ds_pupil,
+                    'ds_reflek_cahaya'=> $request->ds_reflek_cahaya,
+                    'ds_lateralisasi'=> $request->ds_lateralisasi,
+                    'eksposur'=> json_encode($request->eksposur),
+                    'kesimpulan_awal'=> json_encode($request->kesimpulan_awal),
+                    'rk_keluhan_utama'=> $request->rk_keluhan_utama,
+                    'rk_riwayat_penyakit_sekarang'=> $request->rk_riwayat_penyakit_sekarang,
+                    'rk_riwayat_penyakit_dahulu'=> json_encode($request->rk_riwayat_penyakit_dahulu),
+                    'rk_riwayat_penyakit_keluarga'=> $request->rk_riwayat_penyakit_keluarga,
+                    'rk_riwayat_minum_obat'=> $request->rk_riwayat_minum_obat,
+                    'pf_normocephal'=> $request->pf_normocephal,
+                    'pf_sclera_ikterik_1'=> $request->pf_sclera_ikterik_1,
+                    'pf_sclera_ikterik_2'=> $request->pf_sclera_ikterik_2,
+                    'pf_conj_anemis_1'=> $request->pf_conj_anemis_1,
+                    'pf_conj_anemis_2'=> $request->pf_conj_anemis_2,
+                    'pf_perbesaran_kelenjar_getah_bening'=> $request->pf_perbesaran_kelenjar_getah_bening,
+                    'pf_deviasi_trachea'=> $request->pf_deviasi_trachea,
+                    'pf_suara_dasar_veikuler_1'=> $request->pf_suara_dasar_veikuler_1,
+                    'pf_suara_dasar_veikuler_2'=> $request->pf_suara_dasar_veikuler_2,
+                    'pf_rhonki_1'=> $request->pf_rhonki_1,
+                    'pf_rhonki_2'=> $request->pf_rhonki_2,
+                    'pf_wheezing_1'=> $request->pf_wheezing_1,
+                    'pf_wheezing_2'=> $request->pf_wheezing_2,
+                    'pf_bunyi_jantung_1_2'=> $request->pf_bunyi_jantung_1_2,
+                    'pf_bunyi_jantung_1_2_status'=> $request->pf_bunyi_jantung_1_2_status,
+                    'pf_bising_usus'=> $request->pf_bising_usus,
+                    'pf_bising_usus_status' => $request->pf_bising_usus_status,
+                    'pf_nyeri_tekan_abdomen'=> $request->pf_nyeri_tekan_abdomen,
+                    'pf_nyeri_tekan_abdomen_area'=> $request->pf_nyeri_tekan_abdomen_area,
+                    'pf_akral_hangat_a_1'=> $request->pf_akral_hangat_a_1,
+                    'pf_akral_hangat_a_2'=> $request->pf_akral_hangat_a_2,
+                    'pf_akral_hangat_b_1'=> $request->pf_akral_hangat_b_1,
+                    'pf_akral_hangat_b_2'=> $request->pf_akral_hangat_b_2,
+                    'pf_oedema_a_1'=> $request->pf_oedema_a_1,
+                    'pf_oedema_a_2'=> $request->pf_oedema_a_2,
+                    'pf_oedema_b_1'=> $request->pf_oedema_b_1,
+                    'pf_oedema_b_2'=> $request->pf_oedema_b_2,
+                    'pf_ekg'=> $request->pf_ekg,
+                    'pf_gds'=> $request->pf_gds,
+                    'pf_au'=> $request->pf_au,
+                    'pf_chol'=> $request->pf_chol,
+                    'pf_hb'=> $request->pf_hb,
+                    'anatomi_tubuh'=> $request->anatomi_tubuh,
+                    'diagnosis_medis'=> json_encode($request->diagnosis_medis),
+                    'terapi_tindakan_konsul'=> json_encode($request->terapi_tindakan_konsul),
+                    'terapi_tindakan_konsul_dr'=> $request->terapi_tindakan_konsul_dr,
+                    'ftv_td'=> $request->ftv_td,
+                    'ftv_hr'=> $request->ftv_hr,
+                    'ftv_rr'=> $request->ftv_rr,
+                    'ftv_sh'=> $request->ftv_sh,
+                    'ftv_spo2'=> $request->ftv_spo2,
+                    'ftv_nrm'=> $request->ftv_nrm,
+                    'ftv_gds'=> $request->ftv_gds,
+                    'ftv_skala_nyeri'=> $request->ftv_skala_nyeri,
+                    'ftv_pukul'=> $request->ftv_pukul,
+                    'rsr_rs'=> $request->rsr_rs,
+                    'rsr_tgl'=> $request->rsr_tgl,
+                    'rsr_jam'=> $request->rsr_jam,
+                    'nama_ttd_petugas_ambulance_hebat'=> $request->nama_ttd_petugas_ambulance_hebat,
+                    'ttd_petugas_ambulance_hebat'=> $request->ttd_petugas_ambulance_hebat,
+                    'keluarga_pasien_petugas_rs'=> $request->keluarga_pasien_petugas_rs,
+                    'nama_ttd_keluarga_pasien_petugas_rs'=> $request->nama_ttd_keluarga_pasien_petugas_rs,
+                    'ttd_keluarga_pasien_petugas_rs'=> $request->ttd_keluarga_pasien_petugas_rs,
+                ]);
 
-            $form = Form::create([
-               'id_form' => $form_umum->id,
-               'id_pembuat' => Auth::check() ? Auth::id() : 1,
-               'id_pasien' => $pasien->id,
-               'id_tim_ambulan' => $request->ita_id_tim,
-               'tgl_penanganan' => $request->tgl_penanganan ? date('Y-m-d', strtotime($request->tgl_penanganan)) : null,
-               'jenis' => 'form umum' 
-            ]);
+                $form = Form::create([
+                   'id_form' => $form_umum->id,
+                   'id_pembuat' => Auth::check() ? Auth::id() : 1,
+                   'id_pasien' => $pasien->id,
+                   'id_tim_ambulan' => $request->ita_id_tim,
+                   'tgl_penanganan' => $request->tgl_penanganan ? date('Y-m-d', strtotime($request->tgl_penanganan)) : null,
+                   'jenis' => 'form umum' 
+                ]);
 
-            $form_umum->update([
-                "id_form"=>$form->id,
-            ]);
+                $form_umum->update([
+                    "id_form"=>$form->id,
+                ]);
 
-            return response()->json("Berhasil simpan data");
-        });
+                return response()->json("Berhasil simpan data");
+            });
+            
+        // ===============================================
+        // INI PENANGKAP ERRORNYA (CATCH)
+        // ===============================================
+        } catch (\Exception $e) {
+            \Log::error('Error Form Umum: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan ke database. Mohon cek kembali isian form Anda.'
+            ], 500);
+        }
     }
 
     public function perbarui(Request $request)
@@ -249,6 +269,8 @@ class FormUmumController extends Controller
                 'ita_perawat'=> $request->ita_perawat,
                 'ita_bidan'=> $request->ita_bidan,
                 'ita_driver'=> $request->ita_driver,
+                'ita_nakes_1' => $request->ita_nakes_1 ?? '-',
+                'ita_nakes_2' => $request->ita_nakes_2 ?? '-',
                 'kondisi_kritis'=> json_encode($request->kondisi_kritis),
                 'jalan_nafas'=> json_encode($request->jalan_nafas),
                 'pernafasan'=> json_encode($request->pernafasan),

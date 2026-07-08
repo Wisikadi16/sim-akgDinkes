@@ -30,6 +30,7 @@ function MapClickHandler({ onMapClick }) {
 
 export default function Order({ auth }) {
     // export default function Order() {
+    const [isProcessing, setIsProcessing] = useState(false);
     const [semua_order, set_semua_order] = useState([]);
     const [semua_order_cari, set_semua_order_cari] = useState([]);
     const [semua_tim_ambulan, set_semua_tim_ambulan] = useState([]);
@@ -350,23 +351,30 @@ export default function Order({ auth }) {
     }
 
     const oc_terima_simpan = (id) => {
-        axios.post(window.location.origin + '/order/terima',
-            {
-                id: id,
-            }).then(function (response) {
-                console.log(response)
-                set_null_data()
+        if (isProcessing) return;
 
-                set_terima(false)
+        setIsProcessing(true);
 
-                refresh_all_data()
+        axios.post(window.location.origin + '/order/terima', {
+            id: id,
+        })
+        .then(function (response) {
+            console.log(response);
+            set_null_data();
+            set_terima(false);
+            refresh_all_data();
 
-                toast.success(response.data.message, {
-                    position: toast.POSITION.TOP_RIGHT,
-                });
-
-            })
-
+            toast.success(response.data.message, {
+                position: toast.POSITION.TOP_RIGHT,
+            });
+        })
+        .catch(function (error) {
+            console.error(error);
+            toast.error("Gagal menerima order. Silakan coba lagi.");
+        })
+        .finally(function () {
+            setIsProcessing(false);
+        });
     }
 
     const [selesai, set_selesai] = useState(false);
@@ -760,7 +768,7 @@ export default function Order({ auth }) {
         // Validate date difference on button press
         if (tanggalDariInput && tanggalSampaiInput) {
             const diffInDays = (new Date(tanggalSampaiInput) - new Date(tanggalDariInput)) / (1000 * 60 * 60 * 24);
-            
+
             if (diffInDays > 7) {
                 toast.warning("Pemilihan tanggal hanya satu pekan", { position: toast.POSITION.TOP_RIGHT });
                 setTanggalSampaiInput(tanggalDariInput);
@@ -1274,7 +1282,7 @@ export default function Order({ auth }) {
                         <span className="text-xs font-bold text-gray-600 dark:text-slate-300 transition-colors duration-300 uppercase tracking-wider">Status Tim Live</span>
                         <div className="hidden md:block w-px h-6 bg-slate-200 dark:bg-slate-700 transition-colors duration-300 ml-2"></div>
                     </div>
-                    
+
                     {/* Horizontal scroll container with hidden scrollbar */}
                     <div className="flex overflow-x-auto pb-1 md:pb-0 flex-1 items-center gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {semua_tim_ambulan.map((val, index) => (
@@ -1282,8 +1290,8 @@ export default function Order({ auth }) {
                                 <div
                                     key={`row-${index}`}
                                     className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-sm transition-all hover:shadow-md cursor-default"
-                                    style={{ 
-                                        backgroundColor: `${warna_status(val.order.status)}25`, 
+                                    style={{
+                                        backgroundColor: `${warna_status(val.order.status)}25`,
                                         borderColor: warna_status(val.order.status),
                                         color: 'var(--dt-row-text, #334155)'
                                     }}
@@ -1317,7 +1325,7 @@ export default function Order({ auth }) {
                     </div>
 
                     {/* DATE FILTERS (Inline Group) */}
-                    <div className="flex flex-col sm:flex-row items-center gap-2 bg-slate-50 dark:bg-slate-900 transition-colors duration-300/80 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 transition-colors duration-300">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 bg-slate-50 dark:bg-slate-900 transition-colors duration-300/80 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                         <div className="flex items-center gap-2 px-2 w-full sm:w-auto justify-between sm:justify-start">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Dari</span>
                             <input
@@ -1325,7 +1333,8 @@ export default function Order({ auth }) {
                                 id="tanggal_dari"
                                 value={tanggalDariInput}
                                 onChange={handleTanggalDariChange}
-                                className="bg-transparent border-none text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors duration-300 focus:ring-0 p-1 cursor-pointer w-full sm:w-auto outline-none"
+                                // Tambahkan [color-scheme:light] dan dark:[color-scheme:dark] di sini
+                                className="bg-transparent border-none text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors duration-300 focus:ring-0 p-1 cursor-pointer w-full sm:w-auto outline-none [color-scheme:light] dark:[color-scheme:dark] dark:[&::-webkit-calendar-picker-indicator]:opacity-70 dark:hover:[&::-webkit-calendar-picker-indicator]:opacity-100"
                             />
                         </div>
                         <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-700 transition-colors duration-300"></div>
@@ -1336,7 +1345,8 @@ export default function Order({ auth }) {
                                 id="tanggal_sampai"
                                 value={tanggalSampaiInput}
                                 onChange={handleTanggalSampaiChange}
-                                className="bg-transparent border-none text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors duration-300 focus:ring-0 p-1 cursor-pointer w-full sm:w-auto outline-none"
+                                // Dan tambahkan juga di sini
+                                className="bg-transparent border-none text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors duration-300 focus:ring-0 p-1 cursor-pointer w-full sm:w-auto outline-none [color-scheme:light] dark:[color-scheme:dark] dark:[&::-webkit-calendar-picker-indicator]:opacity-70 dark:hover:[&::-webkit-calendar-picker-indicator]:opacity-100"
                             />
                         </div>
                     </div>
@@ -1397,41 +1407,41 @@ export default function Order({ auth }) {
                         conditionalRowStyles={conditionalRowStyles}
                         customStyles={{
                             pagination: {
-                                        style: {
-                                            backgroundColor: 'transparent',
-                                            color: 'var(--dt-row-text, #334155)',
-                                            borderTopColor: 'var(--dt-border, #f1f5f9)',
-                                        },
-                                        pageButtonsStyle: {
-                                            color: 'var(--dt-row-text, #334155)',
-                                            fill: 'var(--dt-row-text, #334155)',
-                                            backgroundColor: 'transparent',
-                                            '&:disabled': {
-                                                cursor: 'unset',
-                                                color: 'var(--dt-border, #f1f5f9)',
-                                                fill: 'var(--dt-border, #f1f5f9)',
-                                            },
-                                            '&:hover:not(:disabled)': {
-                                                backgroundColor: 'var(--dt-hover-bg, #f1f5f9)',
-                                            },
-                                            '&:focus': {
-                                                outline: 'none',
-                                                backgroundColor: 'var(--dt-hover-bg, #f1f5f9)',
-                                            },
-                                        },
+                                style: {
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--dt-row-text, #334155)',
+                                    borderTopColor: 'var(--dt-border, #f1f5f9)',
+                                },
+                                pageButtonsStyle: {
+                                    color: 'var(--dt-row-text, #334155)',
+                                    fill: 'var(--dt-row-text, #334155)',
+                                    backgroundColor: 'transparent',
+                                    '&:disabled': {
+                                        cursor: 'unset',
+                                        color: 'var(--dt-border, #f1f5f9)',
+                                        fill: 'var(--dt-border, #f1f5f9)',
                                     },
-                                    table: {
-                                        style: {
-                                            backgroundColor: 'transparent',
-                                        }
+                                    '&:hover:not(:disabled)': {
+                                        backgroundColor: 'var(--dt-hover-bg, #f1f5f9)',
                                     },
-                                    noData: {
-                                        style: {
-                                            backgroundColor: 'transparent',
-                                            color: 'var(--dt-row-text, #334155)',
-                                        }
+                                    '&:focus': {
+                                        outline: 'none',
+                                        backgroundColor: 'var(--dt-hover-bg, #f1f5f9)',
                                     },
-                                    headRow: {
+                                },
+                            },
+                            table: {
+                                style: {
+                                    backgroundColor: 'transparent',
+                                }
+                            },
+                            noData: {
+                                style: {
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--dt-row-text, #334155)',
+                                }
+                            },
+                            headRow: {
                                 style: {
                                     backgroundColor: 'var(--dt-header-bg, #f8fafc)',
                                     color: 'var(--dt-header-text, #64748b)',
@@ -1444,31 +1454,31 @@ export default function Order({ auth }) {
                                 }
                             },
                             rows: {
-                                        style: {
-                                            fontSize: '14px',
-                                            fontWeight: '500',
-                                            color: 'var(--dt-row-text, #334155)',
-                                            backgroundColor: 'transparent',
-                                            minHeight: '64px',
-                                            '&:not(:last-of-type)': {
-                                                borderBottomStyle: 'solid',
-                                                borderBottomWidth: '1px',
-                                                borderBottomColor: 'var(--dt-border, #f1f5f9)'
-                                            }
-                                        },
-                                        stripedStyle: {
-                                            color: 'var(--dt-row-text, #334155)',
-                                            backgroundColor: 'var(--dt-striped-bg, #f8fafc)'
-                                        },
-                                        highlightOnHoverStyle: {
-                                            color: 'var(--dt-hover-text, #0f172a)',
-                                            backgroundColor: 'var(--dt-hover-bg, #f1f5f9)',
-                                            transitionDuration: '0.15s',
-                                            transitionProperty: 'background-color',
-                                            borderBottomColor: 'var(--dt-border)',
-                                            outlineStyle: 'none',
-                                        }
-                                    },
+                                style: {
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: 'var(--dt-row-text, #334155)',
+                                    backgroundColor: 'transparent',
+                                    minHeight: '64px',
+                                    '&:not(:last-of-type)': {
+                                        borderBottomStyle: 'solid',
+                                        borderBottomWidth: '1px',
+                                        borderBottomColor: 'var(--dt-border, #f1f5f9)'
+                                    }
+                                },
+                                stripedStyle: {
+                                    color: 'var(--dt-row-text, #334155)',
+                                    backgroundColor: 'var(--dt-striped-bg, #f8fafc)'
+                                },
+                                highlightOnHoverStyle: {
+                                    color: 'var(--dt-hover-text, #0f172a)',
+                                    backgroundColor: 'var(--dt-hover-bg, #f1f5f9)',
+                                    transitionDuration: '0.15s',
+                                    transitionProperty: 'background-color',
+                                    borderBottomColor: 'var(--dt-border)',
+                                    outlineStyle: 'none',
+                                }
+                            },
                         }}
                     />
                 </div>
@@ -1608,7 +1618,7 @@ export default function Order({ auth }) {
 
                                     {/* Informasi Penjamin (BPJS) */}
                                     {/*<div className="grid grid-cols-2 gap-3">*/}
-                                        {/*<div className="flex flex-col gap-2">
+                                    {/*<div className="flex flex-col gap-2">
                                             <label className="text-sm font-semibold text-gray-700 dark:text-slate-200 transition-colors duration-300">Status BPJS</label>
                                             <select
                                                 name="status_bpjs"
@@ -1940,51 +1950,108 @@ export default function Order({ auth }) {
                 </div>
             }
             {terima &&
-                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in">
-                    <div className="bg-white dark:bg-slate-800 transition-colors duration-300 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden scale-100 animate-scale-up border border-gray-100 dark:border-slate-700/50 transition-colors duration-300">
-                        <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-700/50 transition-colors duration-300 flex justify-between items-center bg-slate-50 dark:bg-slate-900 transition-colors duration-300 shrink-0">
-                            <h3 className="font-bold text-gray-800 dark:text-slate-100 transition-colors duration-300 text-lg flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-8 bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in">
+                    {/* Modal Container: Otomatis max-w-sm di HP, dan melebar hingga max-w-4xl di Desktop */}
+                    <div className="bg-white dark:bg-slate-800 transition-colors duration-300 rounded-2xl w-full max-w-sm md:max-w-4xl shadow-2xl overflow-hidden scale-100 animate-scale-up border border-gray-100 dark:border-slate-700/50 flex flex-col max-h-[90vh]">
+                        
+                        {/* Header */}
+                        <div className="px-6 py-4 md:py-5 border-b border-gray-100 dark:border-slate-700/50 flex justify-between items-center bg-slate-50 dark:bg-slate-900 shrink-0">
+                            <h3 className="font-bold text-gray-800 dark:text-slate-100 text-lg md:text-xl flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                Terima Order
+                                Terima Order Layanan
                             </h3>
-                            <button onClick={(e) => x()} className="text-gray-400 hover:text-red-500 transition-colors bg-white dark:bg-slate-800 transition-colors duration-300 rounded-full p-1 hover:bg-red-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            <button onClick={(e) => x()} className="text-gray-400 hover:text-red-500 bg-white dark:bg-slate-800 rounded-full p-1.5 hover:bg-red-100 transition-colors outline-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        <div className="p-6">
-                            <p className="text-gray-600 dark:text-slate-300 transition-colors duration-300 text-sm mb-4 font-medium text-center">Apakah Anda ingin <span className="font-bold text-blue-600">menerima</span> order layanan ini?</p>
+                        
+                        {/* Body Konten */}
+                        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-slate-800">
+                            <p className="text-gray-600 dark:text-slate-300 text-sm md:text-base mb-6 font-medium text-center">
+                                Apakah Anda ingin <span className="font-bold text-blue-600">menerima</span> dan menindaklanjuti order ambulan ini?
+                            </p>
 
-                            <div className="bg-slate-50 dark:bg-slate-900 transition-colors duration-300 rounded-xl p-4 text-sm text-gray-700 dark:text-slate-200 transition-colors duration-300 space-y-2 mb-6 border border-gray-100 dark:border-slate-700/50 transition-colors duration-300 shadow-inner">
-                                <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-slate-700 transition-colors duration-300/80">
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 transition-colors duration-300 uppercase tracking-wider">Waktu Order</span>
-                                    <span className="font-bold text-gray-800 dark:text-slate-100 transition-colors duration-300 bg-white dark:bg-slate-800 transition-colors duration-300 px-2 py-0.5 rounded shadow-sm border border-gray-100 dark:border-slate-700/50 transition-colors duration-300">{data.waktu_order}</span>
+                            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5 md:p-6 border border-gray-100 dark:border-slate-700/50 shadow-inner">
+                                {/* Waktu Order (Selalu Full Width di atas) */}
+                                <div className="flex justify-between items-center pb-4 mb-5 border-b border-gray-200 dark:border-slate-700/80">
+                                    <span className="text-xs md:text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Waktu Order Masuk</span>
+                                    <span className="font-bold text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-1.5 rounded-lg shadow-sm border border-gray-100 dark:border-slate-700/50 md:text-base">{data.waktu_order}</span>
                                 </div>
-                                <div className="pt-1">
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 transition-colors duration-300 uppercase tracking-wider block mb-1">Penelepon</span>
-                                    <span className="font-semibold text-gray-800 dark:text-slate-100 transition-colors duration-300 bg-white dark:bg-slate-800 transition-colors duration-300 px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-slate-700/50 transition-colors duration-300 block w-full shadow-sm">{data.nama_penelepon || "-"}</span>
+                                
+                                {/* Grid Konten Utama: 1 Kolom di HP, 2 Kolom di Desktop */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+                                    
+                                    {/* Kolom Kiri */}
+                                    <div className="space-y-5">
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Asal Permintaan (Cara Order)</span>
+                                            <span className="font-semibold text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full shadow-sm md:text-base">{data.cara_order == "112" ? "Call Center 112" : (data.cara_order || "-")}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Nama Pasien</span>
+                                            <span className="font-semibold text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full shadow-sm md:text-base">{data.nama_pasien || "-"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Nama Penelepon</span>
+                                            <span className="font-semibold text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full shadow-sm md:text-base">{data.nama_penelepon || "-"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Kasus / Keluhan Pasien</span>
+                                            <span className="font-medium text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-3 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full text-sm md:text-base shadow-sm min-h-[60px] md:min-h-[80px] leading-relaxed">{data.kasus || "-"}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Kolom Kanan */}
+                                    <div className="space-y-5">
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Jenis Layanan / Pemeriksaan</span>
+                                            <span className="font-semibold text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full shadow-sm md:text-base">{data.jenis_layanan || "-"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">NIK Pasien</span>
+                                            <span className="font-semibold text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full shadow-sm break-all md:text-base">{data.nik_pasien || "-"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">No. Telepon Aktif</span>
+                                            <span className="font-semibold text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full shadow-sm md:text-base">{data.no_penelepon || "-"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Riwayat Alergi Pasien</span>
+                                            <span className="font-medium text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-3 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full text-sm md:text-base shadow-sm min-h-[60px] md:min-h-[80px] leading-relaxed">{data.riwayat_alergi || "-"}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Data Lebar (Memakan 2 Kolom di Desktop) */}
+                                    <div className="md:col-span-2 space-y-5 pt-2 border-t border-gray-200 dark:border-slate-700/50">
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Alamat Lengkap Kejadian</span>
+                                            <span className="font-medium text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-3 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full text-sm md:text-base leading-relaxed shadow-sm">
+                                                {data.alamat} <br />
+                                                <span className="text-gray-500 dark:text-slate-400 text-xs md:text-sm mt-1 block font-semibold">Kel. {data.nama_kelurahan}, Kec. {data.nama_kecamatan}</span>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] md:text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">Catatan Khusus / Keterangan Lain</span>
+                                            <span className="font-medium text-gray-800 dark:text-slate-100 bg-white dark:bg-slate-800 px-3 md:px-4 py-3 rounded-xl border border-gray-100 dark:border-slate-700/50 block w-full text-sm md:text-base shadow-sm min-h-[50px]">{data.keterangan_lain || "-"}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 transition-colors duration-300 uppercase tracking-wider block mb-1">Lokasi</span>
-                                    <span className="font-medium text-gray-800 dark:text-slate-100 transition-colors duration-300 bg-white dark:bg-slate-800 transition-colors duration-300 px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-slate-700/50 transition-colors duration-300 block w-full text-xs leading-relaxed shadow-sm">
-                                        {data.alamat} <br /><span className="text-gray-500 dark:text-slate-400 transition-colors duration-300">Kel. {data.nama_kelurahan}, Kec. {data.nama_kecamatan}</span>
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 transition-colors duration-300 uppercase tracking-wider block mb-1">Kasus</span>
-                                    <span className="font-medium text-gray-800 dark:text-slate-100 transition-colors duration-300 bg-white dark:bg-slate-800 transition-colors duration-300 px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-slate-700/50 transition-colors duration-300 block w-full text-xs shadow-sm border border-gray-100 dark:border-slate-700/50 transition-colors duration-300">{data.kasus || "-"}</span>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 transition-colors duration-300 uppercase tracking-wider block mb-1">Catatan Khusus</span>
-                                    <span className="font-medium text-gray-800 dark:text-slate-100 transition-colors duration-300 bg-white dark:bg-slate-800 transition-colors duration-300 px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-slate-700/50 transition-colors duration-300 block w-full text-xs shadow-sm border border-gray-100 dark:border-slate-700/50 transition-colors duration-300">{data.keterangan_lain || "-"}</span>
-                                </div>
-                            </div>
-                            <div className="flex gap-3 justify-end mt-2">
-                                <button type="button" onClick={() => x()} className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-slate-200 transition-colors duration-300 bg-white dark:bg-slate-800 transition-colors duration-300 border border-gray-300 dark:border-slate-600 transition-colors duration-300 rounded-xl hover:bg-gray-50 dark:bg-slate-900 transition-colors duration-300 focus:ring-2 focus:ring-gray-100 transition-all">Tidak</button>
-                                <button type="button" onClick={() => oc_terima_simpan(data.id)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm shadow-red-200 rounded-xl focus:ring-2 focus:ring-red-200 transition-all shadow-md shadow-red-200">Ya, Terima</button>
                             </div>
                         </div>
+
+                        {/* Footer Buttons */}
+                        <div className="px-6 py-4 md:py-5 border-t border-gray-100 dark:border-slate-700/50 bg-gray-50 dark:bg-slate-900/80 flex flex-col md:flex-row gap-3 justify-end shrink-0">
+                            <button type="button" onClick={() => x()} className="w-full md:w-32 px-5 py-3 text-sm md:text-base font-semibold text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 focus:ring-4 focus:ring-gray-200 transition-all outline-none">Batal</button>
+                            <button type="button" onClick={() => oc_terima_simpan(data.id)} className="w-full md:w-auto px-8 py-3 text-sm md:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200/40 rounded-xl focus:ring-4 focus:ring-blue-200 transition-all outline-none flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                                    <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
+                                </svg>
+                                Terima Order
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             }

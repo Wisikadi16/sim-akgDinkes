@@ -21,13 +21,13 @@ export default function Sidebar({ auth }) {
   const menu =
     [
       auth.role == "admin" || auth.role == "yankes" ? { name: "Dashboard", nl: "dashboard", link: '/dashboard', icon: HiViewGrid } : null,
-      auth.role == "admin" || auth.role == "Tim Ambulan" || auth.role == "Operator" ? { name: "Laporan", nl: "laporan", link: '/laporan', icon: HiDocumentText } : null,
       auth.role == "admin" || auth.role == "Tim Ambulan" || auth.role == "Operator" ? { name: "Order", nl: "order", link: '/order', icon: HiClipboardList } : null,
       auth.role == "admin" || auth.role == "Tim Ambulan" ? { name: "Catatan Medis", nl: "catatan_medis", link: '/catatan_medis', icon: HiBookOpen } : null,
       auth.role == "admin" ? { name: "Pasien", nl: "pasien", link: '/pasien', icon: HiUsers } : null,
       auth.role == "admin" ? { name: "Admin", nl: "admin", link: '/admin', icon: HiShieldCheck } : null,
       auth.role == "admin" || auth.role == "yankes" || auth.role == "Tim Ambulan" ? { name: "Petugas", nl: "petugas", link: '/petugas', icon: HiUser } : null,
       auth.role == "admin" || auth.role == "yankes" ? { name: "Tim Ambulan", nl: "tim_ambulan", link: '/tim_ambulan', icon: HiTruck } : null,
+      auth.role == "admin" || auth.role == "Tim Ambulan" || auth.role == "Operator" ? { name: "Laporan", nl: "laporan", link: '/laporan', icon: HiDocumentText } : null,
     ]
 
   const filter_menu = menu.filter((item) => item !== null)

@@ -34,54 +34,54 @@ class FormSuratPersetujuanTindakanMedisController extends Controller
                 return response($validator->errors()->first(), 422);
             }
         }
+        try {
 
-        return \DB::transaction(function () use ($request) {
-            // NIK Handling similar to Form Umum
-            $nik = $request->nik;
-            if ($nik === null || $nik === '') {
-                $cari_pasien_non_nik = Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
-                if($cari_pasien_non_nik==null){
-                    $nik = "NON-1";
-                }
-                else{
-                    $get_nik = $cari_pasien_non_nik->nik;
-                    $get_nomor = substr($get_nik, strlen("NON-"));
-                    $nik = "NON-".((int)$get_nomor + 1);
-                }
-                $pasien = Pasien::create([
-                    'nik' => $nik,
-                    'nama' => $request->yg_telah_memberikan_nama,
-                    'no_telepon' => $request->no_telepon,
-                    'tgl_lahir' => $request->yg_telah_memberikan_tgl_lahir, 
-                    'alamat' => $request->yg_telah_memberikan_alamat,
-                    'alamat_kelurahan' => $request->yg_telah_memberikan_alamat_kelurahan,
-                    'alamat_kecamatan' => $request->yg_telah_memberikan_alamat_kecamatan,
-                ]);
-            }
-            else{
-                $pasien = Pasien::where('nik', $request->nik)->first();
-                if($pasien==null){
+            return \DB::transaction(function () use ($request) {
+                $nik = $request->nik;
+                if ($nik === null || $nik === '') {
+                    $cari_pasien_non_nik = Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
+                    if($cari_pasien_non_nik==null){
+                        $nik = "NON-1";
+                    }
+                    else{
+                        $get_nik = $cari_pasien_non_nik->nik;
+                        $get_nomor = substr($get_nik, strlen("NON-"));
+                        $nik = "NON-".((int)$get_nomor + 1);
+                    }
                     $pasien = Pasien::create([
-                        'nik' => $request->nik,
+                        'nik' => $nik,
                         'nama' => $request->yg_telah_memberikan_nama,
                         'no_telepon' => $request->no_telepon,
-                        'tgl_lahir' => $request->yg_telah_memberikan_tgl_lahir,
+                        'tgl_lahir' => $request->yg_telah_memberikan_tgl_lahir, 
                         'alamat' => $request->yg_telah_memberikan_alamat,
                         'alamat_kelurahan' => $request->yg_telah_memberikan_alamat_kelurahan,
                         'alamat_kecamatan' => $request->yg_telah_memberikan_alamat_kecamatan,
                     ]);
                 }
                 else{
-                    $pasien->update([
-                        'nama' => $request->yg_telah_memberikan_nama,
-                        'no_telepon' => $request->no_telepon,
-                        'tgl_lahir' => $request->yg_telah_memberikan_tgl_lahir,
-                        'alamat' => $request->yg_telah_memberikan_alamat,
-                        'alamat_kelurahan' => $request->yg_telah_memberikan_alamat_kelurahan,
-                        'alamat_kecamatan' => $request->yg_telah_memberikan_alamat_kecamatan,
-                    ]);
+                    $pasien = Pasien::where('nik', $request->nik)->first();
+                    if($pasien==null){
+                        $pasien = Pasien::create([
+                            'nik' => $request->nik,
+                            'nama' => $request->yg_telah_memberikan_nama,
+                            'no_telepon' => $request->no_telepon,
+                            'tgl_lahir' => $request->yg_telah_memberikan_tgl_lahir,
+                            'alamat' => $request->yg_telah_memberikan_alamat,
+                            'alamat_kelurahan' => $request->yg_telah_memberikan_alamat_kelurahan,
+                            'alamat_kecamatan' => $request->yg_telah_memberikan_alamat_kecamatan,
+                        ]);
+                    }
+                    else{
+                        $pasien->update([
+                            'nama' => $request->yg_telah_memberikan_nama,
+                            'no_telepon' => $request->no_telepon,
+                            'tgl_lahir' => $request->yg_telah_memberikan_tgl_lahir,
+                            'alamat' => $request->yg_telah_memberikan_alamat,
+                            'alamat_kelurahan' => $request->yg_telah_memberikan_alamat_kelurahan,
+                            'alamat_kecamatan' => $request->yg_telah_memberikan_alamat_kecamatan,
+                        ]);
+                    }
                 }
-            }
 
             $ar_nama_saksi = [];
             if ($request->nama_ttd_saksi) {
@@ -115,19 +115,29 @@ class FormSuratPersetujuanTindakanMedisController extends Controller
                 'ttd_dokter_paramedis' => $request->ttd_dokter_paramedis,
             ]);
 
-            $form = Form::create([
-                'id_form' => $form_surat_persetujuan_tindakan_medis->id,
-                'id_pasien' => $pasien->id,
-                'id_pembuat' => Auth::check() ? Auth::id() : 1,
-                'tgl_penanganan' => $request->tgl_penanganan ? date('Y-m-d', strtotime($request->tgl_penanganan)) : date('Y-m-d'),
-                'jenis' => 'form surat persetujuan tindakan medis' 
-            ]);
+                $form = Form::create([
+                    'id_form' => $form_surat_persetujuan_tindakan_medis->id,
+                    'id_pasien' => $pasien->id,
+                    'id_pembuat' => Auth::check() ? Auth::id() : 1,
+                    'tgl_penanganan' => $request->tgl_penanganan ? date('Y-m-d', strtotime($request->tgl_penanganan)) : date('Y-m-d'),
+                    'jenis' => 'form surat persetujuan tindakan medis' 
+                ]);
 
-            $form_surat_persetujuan_tindakan_medis->update(['id_form' => $form->id]);
+                $form_surat_persetujuan_tindakan_medis->update(['id_form' => $form->id]);
 
-            return response()->json("Berhasil simpan data");
-        });
+                return response()->json("Berhasil simpan data");
+            });
+
+        } catch (\Exception $e) {
+            \Log::error('Error pada Form Surat Persetujuan: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data surat. Mohon cek kembali input Anda.'
+            ], 500);
+        }
     }
+    
     public function ref_form_surat_persetujuan_tindakan_medis(Request $request)
     {
         $id = $request->id_form ?? $request->id;

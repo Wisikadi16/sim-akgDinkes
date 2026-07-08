@@ -28,86 +28,94 @@ class FormMaternalController extends Controller
                 return response($validator->errors()->first(), 422);
             }
         }
+        try {
 
-        return \DB::transaction(function () use ($request) {
-            // Validasi dasar
-            $validatedData = $request->validate([
-                'nama_pasien' => 'nullable|string|max:255',
-                'rs_tujuan' => 'nullable|string|max:255',
-            ]);
-
-            $identitas = $request->identitas_ibu; 
-            $nik = $identitas['nik'] ?? null; 
-
-            if ($nik == null || $nik == '') {
-                $cari_pasien_non_nik = \App\Models\Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
-                if($cari_pasien_non_nik == null){
-                    $nik = "NON-1";
-                } else {
-                    $get_nik = $cari_pasien_non_nik->nik;
-                    $get_nomor = substr($get_nik, strlen("NON-"));
-                    $nik = "NON-".((int)$get_nomor + 1);
-                }
-                $pasien = \App\Models\Pasien::create([
-                    'nik' => $nik,
-                    'nama' => $request->nama_pasien,
-                    'tgl_lahir' => $request->tgl_lahir,
-                    'alamat' => $request->alamat,
+            return \DB::transaction(function () use ($request) {
+                // Validasi dasar
+                $validatedData = $request->validate([
+                    'nama_pasien' => 'nullable|string|max:255',
+                    'rs_tujuan' => 'nullable|string|max:255',
                 ]);
-            } else {
-                $pasien = \App\Models\Pasien::where('nik', $nik)->first();
-                if($pasien == null){
+
+                $identitas = $request->identitas_ibu; 
+                $nik = $identitas['nik'] ?? null; 
+
+                if ($nik == null || $nik == '') {
+                    $cari_pasien_non_nik = \App\Models\Pasien::where('nik', 'LIKE', 'NON%')->orderBy('id', 'desc')->first();
+                    if($cari_pasien_non_nik == null){
+                        $nik = "NON-1";
+                    } else {
+                        $get_nik = $cari_pasien_non_nik->nik;
+                        $get_nomor = substr($get_nik, strlen("NON-"));
+                        $nik = "NON-".((int)$get_nomor + 1);
+                    }
                     $pasien = \App\Models\Pasien::create([
                         'nik' => $nik,
                         'nama' => $request->nama_pasien,
                         'tgl_lahir' => $request->tgl_lahir,
                         'alamat' => $request->alamat,
                     ]);
+                } else {
+                    $pasien = \App\Models\Pasien::where('nik', $nik)->first();
+                    if($pasien == null){
+                        $pasien = \App\Models\Pasien::create([
+                            'nik' => $nik,
+                            'nama' => $request->nama_pasien,
+                            'tgl_lahir' => $request->tgl_lahir,
+                            'alamat' => $request->alamat,
+                        ]);
+                    }
                 }
-            }
 
-            // Simpan data semua (Laravel tahu mana yg json berkat $casts di Model)
-            $maternalData = Form_Maternal::create([
-                'id_pasien' => $pasien->id,
-                'nama_pasien' => $request->nama_pasien,
-                'tanggal_lahir' => $request->tgl_lahir,
-                'alamat' => $request->alamat,
-                'rs_tujuan' => $request->rumah_sakit_rujukan['rs'] ?? null,
-                'petugas_rs_tujuan' => $request->rumah_sakit_rujukan['petugas'] ?? null,
-                'tanggal_rujukan' => isset($request->rumah_sakit_rujukan['tgl']) ? date('Y-m-d', strtotime($request->rumah_sakit_rujukan['tgl'])) : date('Y-m-d'),
-                'jam_rujukan' => $request->rumah_sakit_rujukan['jam'] ?? date('H:i'),
-                'atas_permintaan' => is_array($request->atas_permintaan) ? json_encode($request->atas_permintaan) : $request->atas_permintaan,
-                'petugas_pendamping' => is_array($request->petugas_pendamping) ? json_encode($request->petugas_pendamping) : $request->petugas_pendamping,
-                'kondisi_saat_ini' => is_array($request->pemeriksaan_fisik) ? json_encode($request->pemeriksaan_fisik) : $request->pemeriksaan_fisik,
-                'tanda_syok' => is_array($request->tanda_syok) ? json_encode($request->tanda_syok) : $request->tanda_syok,
-                'alasan_dirujuk' => is_array($request->alasan_dirujuk) ? json_encode($request->alasan_dirujuk) : $request->alasan_dirujuk,
-                'riwayat' => is_array($request->riwayat) ? json_encode($request->riwayat) : $request->riwayat,
-                'riwayat_lain' => $request->riwayat_lain,
-                'fisik' => is_array($request->fisik) ? json_encode($request->fisik) : $request->fisik,
-                'lab' => is_array($request->lab) ? json_encode($request->lab) : $request->lab,
-                'lain_lain' => $request->lain_lain,
-                'diagnosa' => $request->diagnosa,
-                'penanganan' => $request->penanganan,
-                'tindakan_therapy' => $request->tindakan_therapy,
-                'monitoring' => is_array($request->monitoring) ? json_encode($request->monitoring) : $request->monitoring,
-                'handover' => is_array($request->handover) ? json_encode($request->handover) : $request->handover,
-                'ttd_penyerah' => $request->ttd_penyerah,
-                'ttd_penerima' => $request->ttd_penerima,
-            ]);
+                // Simpan data semua (Laravel tahu mana yg json berkat $casts di Model)
+                $maternalData = Form_Maternal::create([
+                    'id_pasien' => $pasien->id,
+                    'nama_pasien' => $request->nama_pasien,
+                    'tanggal_lahir' => $request->tgl_lahir,
+                    'alamat' => $request->alamat,
+                    'rs_tujuan' => $request->rumah_sakit_rujukan['rs'] ?? null,
+                    'petugas_rs_tujuan' => $request->rumah_sakit_rujukan['petugas'] ?? null,
+                    'tanggal_rujukan' => isset($request->rumah_sakit_rujukan['tgl']) ? date('Y-m-d', strtotime($request->rumah_sakit_rujukan['tgl'])) : date('Y-m-d'),
+                    'jam_rujukan' => $request->rumah_sakit_rujukan['jam'] ?? date('H:i'),
+                    'atas_permintaan' => is_array($request->atas_permintaan) ? json_encode($request->atas_permintaan) : $request->atas_permintaan,
+                    'petugas_pendamping' => is_array($request->petugas_pendamping) ? json_encode($request->petugas_pendamping) : $request->petugas_pendamping,
+                    'kondisi_saat_ini' => is_array($request->pemeriksaan_fisik) ? json_encode($request->pemeriksaan_fisik) : $request->pemeriksaan_fisik,
+                    'tanda_syok' => is_array($request->tanda_syok) ? json_encode($request->tanda_syok) : $request->tanda_syok,
+                    'alasan_dirujuk' => is_array($request->alasan_dirujuk) ? json_encode($request->alasan_dirujuk) : $request->alasan_dirujuk,
+                    'riwayat' => is_array($request->riwayat) ? json_encode($request->riwayat) : $request->riwayat,
+                    'riwayat_lain' => $request->riwayat_lain,
+                    'fisik' => is_array($request->fisik) ? json_encode($request->fisik) : $request->fisik,
+                    'lab' => is_array($request->lab) ? json_encode($request->lab) : $request->lab,
+                    'lain_lain' => $request->lain_lain,
+                    'diagnosa' => $request->diagnosa,
+                    'penanganan' => $request->penanganan,
+                    'tindakan_therapy' => $request->tindakan_therapy,
+                    'monitoring' => is_array($request->monitoring) ? json_encode($request->monitoring) : $request->monitoring,
+                    'handover' => is_array($request->handover) ? json_encode($request->handover) : $request->handover,
+                    'ttd_penyerah' => $request->ttd_penyerah,
+                    'ttd_penerima' => $request->ttd_penerima,
+                ]);
 
-            // Record ke tabel global `form` agar muncul di Catatan Medis
-            $form = \App\Models\Form::create([
-                'id_form' => $maternalData->id,
-                'id_pembuat' => Auth::id() ?? 1,
-                'id_pasien' => $pasien->id,
-                'tgl_penanganan' => !empty($request->tgl_penanganan) ? date('Y-m-d', strtotime($request->tgl_penanganan)) : date('Y-m-d'),
-                'jenis' => 'form maternal' 
-            ]);
+                // Record ke tabel global `form` agar muncul di Catatan Medis
+                $form = \App\Models\Form::create([
+                    'id_form' => $maternalData->id,
+                    'id_pembuat' => Auth::id() ?? 1,
+                    'id_pasien' => $pasien->id,
+                    'tgl_penanganan' => !empty($request->tgl_penanganan) ? date('Y-m-d', strtotime($request->tgl_penanganan)) : date('Y-m-d'),
+                    'jenis' => 'form maternal' 
+                ]);
 
-            $maternalData->update(['id_form' => $form->id]);
+                $maternalData->update(['id_form' => $form->id]);
 
-            return response()->json("Berhasil simpan data");
-        });
+                return response()->json("Berhasil simpan data");
+            });
+        } catch (\Exception $e) {
+            \Log::error('Error pada Controller: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data. Mohon cek kembali input Anda.'
+            ], 500);
+        }
     }
 
     public function perbarui(Request $request)

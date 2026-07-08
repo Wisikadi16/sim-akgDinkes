@@ -116,7 +116,7 @@ export default function Form_Lembar_Transfer_Pasien(props) {
                         const parseJSON = (val, fallback) => {
                             let parsed = val;
                             if (typeof val === 'string') {
-                                try { parsed = val ? JSON.parse(val) : fallback; } 
+                                try { parsed = val ? JSON.parse(val) : fallback; }
                                 catch (e) { parsed = fallback; }
                             }
                             if (!parsed) return fallback;
@@ -128,7 +128,7 @@ export default function Form_Lembar_Transfer_Pasien(props) {
                             if (typeof fallback === 'object' && fallback !== null) {
                                 if (Array.isArray(parsed)) return fallback;
                                 if (typeof parsed !== 'object') return fallback;
-                                return { ...fallback, ...parsed }; 
+                                return { ...fallback, ...parsed };
                             }
                             return parsed;
                         };
@@ -157,62 +157,62 @@ export default function Form_Lembar_Transfer_Pasien(props) {
                             terapi_diberikan: row.terapi_diberikan || "",
                             ringkasan_kondisi:
                                 parsedRingkasan &&
-                                Array.isArray(parsedRingkasan)
+                                    Array.isArray(parsedRingkasan)
                                     ? parsedRingkasan
                                     : [
-                                          {
-                                              pukul: "",
-                                              keadaan: "",
-                                              td: "",
-                                              hr: "",
-                                              rr: "",
-                                              suhu: "",
-                                              spo2: "",
-                                              gds: "",
-                                              ekg: "",
-                                              nyeri: "",
-                                              ket: "",
-                                          },
-                                          {
-                                              pukul: "",
-                                              keadaan: "",
-                                              td: "",
-                                              hr: "",
-                                              rr: "",
-                                              suhu: "",
-                                              spo2: "",
-                                              gds: "",
-                                              ekg: "",
-                                              nyeri: "",
-                                              ket: "",
-                                          },
-                                          {
-                                              pukul: "",
-                                              keadaan: "",
-                                              td: "",
-                                              hr: "",
-                                              rr: "",
-                                              suhu: "",
-                                              spo2: "",
-                                              gds: "",
-                                              ekg: "",
-                                              nyeri: "",
-                                              ket: "",
-                                          },
-                                          {
-                                              pukul: "",
-                                              keadaan: "",
-                                              td: "",
-                                              hr: "",
-                                              rr: "",
-                                              suhu: "",
-                                              spo2: "",
-                                              gds: "",
-                                              ekg: "",
-                                              nyeri: "",
-                                              ket: "",
-                                          },
-                                      ],
+                                        {
+                                            pukul: "",
+                                            keadaan: "",
+                                            td: "",
+                                            hr: "",
+                                            rr: "",
+                                            suhu: "",
+                                            spo2: "",
+                                            gds: "",
+                                            ekg: "",
+                                            nyeri: "",
+                                            ket: "",
+                                        },
+                                        {
+                                            pukul: "",
+                                            keadaan: "",
+                                            td: "",
+                                            hr: "",
+                                            rr: "",
+                                            suhu: "",
+                                            spo2: "",
+                                            gds: "",
+                                            ekg: "",
+                                            nyeri: "",
+                                            ket: "",
+                                        },
+                                        {
+                                            pukul: "",
+                                            keadaan: "",
+                                            td: "",
+                                            hr: "",
+                                            rr: "",
+                                            suhu: "",
+                                            spo2: "",
+                                            gds: "",
+                                            ekg: "",
+                                            nyeri: "",
+                                            ket: "",
+                                        },
+                                        {
+                                            pukul: "",
+                                            keadaan: "",
+                                            td: "",
+                                            hr: "",
+                                            rr: "",
+                                            suhu: "",
+                                            spo2: "",
+                                            gds: "",
+                                            ekg: "",
+                                            nyeri: "",
+                                            ket: "",
+                                        },
+                                    ],
                             status_sblm: row.status_sblm || "",
                             status_selama: row.status_selama || "",
                             status_stlh: row.status_stlh || "",

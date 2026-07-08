@@ -40,12 +40,7 @@ export default function Form_Umum({ auth, id }) {
     const [rs_rujukan, set_rs_rujukan] = useState([]);
 
     const os_identitas_pasien = (data) => {
-        useEffect(() => {
-            // set_data(data)
-            set_identitas_pasien(data);
-        });
-        // console.log("identitas_pasien:")
-        // console.log(data)
+        set_identitas_pasien(data);
     };
 
     const [get_data_identitas_tim_ambulance, set_data_identitas_tim_ambulance] =
@@ -55,6 +50,8 @@ export default function Form_Umum({ auth, id }) {
             dokter: "",
             perawat: "",
             bidan: "",
+            nakes_1: "",
+            nakes_2: "",
             driver: "",
         });
 
@@ -86,6 +83,7 @@ export default function Form_Umum({ auth, id }) {
     }, []);
 
     useEffect(() => {
+        
         // var icd_10;
         // axios.post(window.location.origin+'/ref_icd_10').then(function (response){
         //     set_data_icd_10(response.data)
@@ -117,6 +115,19 @@ export default function Form_Umum({ auth, id }) {
                     console.log("reponseeee");
                     console.log(response);
                     set_id_form(response.data.id_form);
+
+                    // identitas tim ambulan (sebelumnya tidak pernah di-parse dari data yang dimuat)
+                    set_data_identitas_tim_ambulance((prev) => ({
+                        ...prev,
+                        id: response.data.ita_id_tim || "",
+                        tim: response.data.ita_tim || "",
+                        dokter: response.data.ita_dokter || "",
+                        perawat: response.data.ita_perawat || "",
+                        bidan: response.data.ita_bidan || "",
+                        nakes_1: response.data.ita_nakes_1 || "",
+                        nakes_2: response.data.ita_nakes_2 || "",
+                        driver: response.data.ita_driver || "",
+                    }));
                     // set_identitas_pasien(prev_data => ({
                     //     ...prev_data,
                     //     id: response.data.pasien.id,
@@ -125,7 +136,7 @@ export default function Form_Umum({ auth, id }) {
                     const parseJSON = (val, fallback) => {
                         let parsed = val;
                         if (typeof val === 'string') {
-                            try { parsed = val ? JSON.parse(val) : fallback; } 
+                            try { parsed = val ? JSON.parse(val) : fallback; }
                             catch (e) { parsed = fallback; }
                         }
                         if (!parsed) return fallback;
@@ -137,7 +148,7 @@ export default function Form_Umum({ auth, id }) {
                         if (typeof fallback === 'object' && fallback !== null) {
                             if (Array.isArray(parsed)) return fallback;
                             if (typeof parsed !== 'object') return fallback;
-                            return { ...fallback, ...parsed }; 
+                            return { ...fallback, ...parsed };
                         }
                         return parsed;
                     };
@@ -367,7 +378,7 @@ export default function Form_Umum({ auth, id }) {
                     set_ttd_petugas_ambulance(
                         response.data.ttd_petugas_ambulance_hebat || ""
                     );
-                    
+
                     if (response.data.ttd_petugas_ambulance_hebat) {
                         setTimeout(() => {
                             if (ref_ttd_petugas_ambulance.current && typeof ref_ttd_petugas_ambulance.current.fromDataURL === 'function') {
@@ -393,7 +404,7 @@ export default function Form_Umum({ auth, id }) {
                     set_ttd_keluarga_pasien_petugas_rs(
                         response.data.ttd_keluarga_pasien_petugas_rs || ""
                     );
-                    
+
                     if (response.data.ttd_keluarga_pasien_petugas_rs) {
                         setTimeout(() => {
                             if (ref_ttd_keluarga_pasien_petugas_rs.current && typeof ref_ttd_keluarga_pasien_petugas_rs.current.fromDataURL === 'function') {
@@ -401,6 +412,14 @@ export default function Form_Umum({ auth, id }) {
                             }
                         }, 500);
                     }
+                    if (response.data.anatomi_tubuh) {
+                        setTimeout(() => {
+                            if (ref_anatomi_tubuh.current && typeof ref_anatomi_tubuh.current.fromDataURL === 'function') {
+                                ref_anatomi_tubuh.current.fromDataURL(response.data.anatomi_tubuh);
+                            }
+                        }, 500);
+                    }
+
                 });
         }
         // else{
@@ -1083,9 +1102,21 @@ export default function Form_Umum({ auth, id }) {
         set_ttd_keluarga_pasien_petugas_rs,
     ] = useState("");
 
+    let ref_anatomi_tubuh = useRef({});
+
+    const oe_anatomi_tubuh = () => {
+    };
+
+    const oc_hapus_anatomi_tubuh = () => {
+        if (ref_anatomi_tubuh.current) {
+            ref_anatomi_tubuh.current.clear();
+        }
+    };
     // const [get_url_ttd_petugas_ambulance, set_url_ttd_petugas_ambulance] = useState();
 
     let ref_ttd_petugas_ambulance = useRef({});
+
+
 
     let ref_ttd_keluarga_pasien_petugas_rs = useRef({});
 
@@ -1130,11 +1161,14 @@ export default function Form_Umum({ auth, id }) {
     const oc_simpan = (e) => {
         console.log(e.preventDefault());
 
-        const ttd_petugas_val = ref_ttd_petugas_ambulance.current && typeof ref_ttd_petugas_ambulance.current.isEmpty === 'function' && !ref_ttd_petugas_ambulance.current.isEmpty() 
-            ? ref_ttd_petugas_ambulance.current.getCanvas().toDataURL('image/png') 
+        const ttd_petugas_val = ref_ttd_petugas_ambulance.current && typeof ref_ttd_petugas_ambulance.current.isEmpty === 'function' && !ref_ttd_petugas_ambulance.current.isEmpty()
+            ? ref_ttd_petugas_ambulance.current.getCanvas().toDataURL('image/png')
             : "";
-        const ttd_keluarga_val = ref_ttd_keluarga_pasien_petugas_rs.current && typeof ref_ttd_keluarga_pasien_petugas_rs.current.isEmpty === 'function' && !ref_ttd_keluarga_pasien_petugas_rs.current.isEmpty() 
-            ? ref_ttd_keluarga_pasien_petugas_rs.current.getCanvas().toDataURL('image/png') 
+        const ttd_keluarga_val = ref_ttd_keluarga_pasien_petugas_rs.current && typeof ref_ttd_keluarga_pasien_petugas_rs.current.isEmpty === 'function' && !ref_ttd_keluarga_pasien_petugas_rs.current.isEmpty()
+            ? ref_ttd_keluarga_pasien_petugas_rs.current.getCanvas().toDataURL('image/png')
+            : "";
+        const anatomi_val = ref_anatomi_tubuh.current && typeof ref_anatomi_tubuh.current.isEmpty === 'function' && !ref_anatomi_tubuh.current.isEmpty()
+            ? ref_anatomi_tubuh.current.getCanvas().toDataURL('image/png')
             : "";
 
         if (
@@ -1191,7 +1225,10 @@ export default function Form_Umum({ auth, id }) {
                         ita_dokter: get_data_identitas_tim_ambulance.dokter,
                         ita_perawat: get_data_identitas_tim_ambulance.perawat,
                         ita_bidan: get_data_identitas_tim_ambulance.bidan,
+                        ita_nakes_1: get_data_identitas_tim_ambulance.nakes_1,
+                        ita_nakes_2: get_data_identitas_tim_ambulance.nakes_2,
                         ita_driver: get_data_identitas_tim_ambulance.driver,
+                        
                         //
                         //survei primer
                         kondisi_kritis: get_data_surv_prim_kondisi_kritis,
@@ -1338,6 +1375,8 @@ export default function Form_Umum({ auth, id }) {
                             get_data_nama_ttd_keluarga_pasien_petugas_rs,
                         ttd_keluarga_pasien_petugas_rs:
                             ttd_keluarga_val,
+                        anatomi_tubuh: 
+                            anatomi_val,
                     })
                     .then(function (response) {
                         toast.success(response.data, {
@@ -1369,6 +1408,8 @@ export default function Form_Umum({ auth, id }) {
                         ita_dokter: get_data_identitas_tim_ambulance.dokter,
                         ita_perawat: get_data_identitas_tim_ambulance.perawat,
                         ita_bidan: get_data_identitas_tim_ambulance.bidan,
+                        ita_nakes_1: get_data_identitas_tim_ambulance.nakes_1,
+                        ita_nakes_2: get_data_identitas_tim_ambulance.nakes_2,
                         ita_driver: get_data_identitas_tim_ambulance.driver,
                         //
                         //survei primer
@@ -1516,6 +1557,8 @@ export default function Form_Umum({ auth, id }) {
                             get_data_nama_ttd_keluarga_pasien_petugas_rs,
                         ttd_keluarga_pasien_petugas_rs:
                             ttd_keluarga_val,
+                        anatomi_tubuh: 
+                            anatomi_val,
                     })
                     .then(function (response) {
                         toast.success(response.data, {
@@ -1585,14 +1628,17 @@ export default function Form_Umum({ auth, id }) {
                     onSubmit={os_identitas_pasien}
                     id_form_umum={id}
                 />
-                <div className="grid grid-cols-5 mt-3 text-xxs md:text-sm sm:text-xs">
-                    <Identitas_Tim
-                        isPrinting={isPrinting}
-                        onSubmit={os_identitas_tim_ambulance}
-                        auth={auth}
-                        id_form={id_form}
-                    />
-                    <div className="mr-3 col-start-2 col-end-6">
+                <div className="w-full mt-3 text-xxs md:text-sm sm:text-xs">
+                    <div className="mb-2 print:mb-1">
+                        <Identitas_Tim
+                            isPrinting={isPrinting}
+                            onSubmit={os_identitas_tim_ambulance}
+                            auth={auth}
+                            id_form={id_form}
+                            initialData={get_data_identitas_tim_ambulance}
+                        />
+                    </div>
+                    <div className="mr-3">
                         <div className="border-solid border-2 font-bold text-center">
                             ASESMEN GAWAT DARURAT
                         </div>
@@ -2443,8 +2489,8 @@ export default function Form_Umum({ auth, id }) {
                                             onChange={
                                                 oc_riwayat_penyakit_dahulu
                                             }
-                                            // checked={get_data_surv_prim_riwayat_penyakit_dahulu.includes(option.value)?get_data_surv_prim_riwayat_penyakit_dahulu.includes(option.value):''}
-                                            // id="id_cbx_epilepsi"
+                                        // checked={get_data_surv_prim_riwayat_penyakit_dahulu.includes(option.value)?get_data_surv_prim_riwayat_penyakit_dahulu.includes(option.value):''}
+                                        // id="id_cbx_epilepsi"
                                         />
                                         <label className="pl-2 inline-block hover:cursor-pointer">
                                             {option.value}
@@ -2513,1193 +2559,785 @@ export default function Form_Umum({ auth, id }) {
                         {/* </div> */}
                     </div>
                 </div>
-                <div className="border-solid border-2 mt-3 ml-3 mr-3 font-bold text-xs md:text-sm sm:text-xs flex justify-center">
-                    III. PEMERIKSAAN FISIK DAN PEMERIKSAAN PENUNJANG
-                </div>
-                <div className="grid grid-cols-3 ml-3 mr-3 text-xs md:text-sm sm:text-xs">
-                    <div className="border-solid border-2 col-start-1 col-end-1">
-                        gambar
+                {/* SECTION III PEMERIKSAAN FISIK DAN PENUNJANG */}
+                <div className="border border-black p-1 mb-1 mt-2 flex flex-col shadow-sm bg-white print:break-inside-avoid ml-3 mr-3 text-xs md:text-sm sm:text-xs">
+                    <div className="text-center font-bold bg-gray-200 border-b border-black p-2 print:p-1 w-full text-sm md:text-base sm:text-sm tracking-widest uppercase">
+                        III. PEMERIKSAAN FISIK DAN PEMERIKSAAN PENUNJANG
                     </div>
-                    <div className="grid grid-cols-6 border-solid border-2 col-start-2 col-end-4 text-xxs md:text-sm sm:text-xs">
-                        <div>Kepala</div>
-                        <div className="col-start-2 col-end-7 flex">
-                            <div className="flex">
-                                <div className="mr-1">: Normocephal</div>
-                                {/* <div className="ml-1"> */}(
-                                {isPrinting == false && (
-                                    <input
-                                        className="w-[15px] h-[20px] text-xxs md:text-sm sm:text-xs p-0"
-                                        type="text"
-                                        name="normocephal"
-                                        value={
-                                            get_data_pemeriksaan_fisik_dan_penunjang.normocephal
-                                        }
-                                        onChange={
-                                            oc_pemeriksaan_fisik_dan_penunjang
-                                        }
-                                    ></input>
-                                )}
-                                {isPrinting && (
-                                    <div>
-                                        {
-                                            get_data_pemeriksaan_fisik_dan_penunjang.normocephal
-                                        }
-                                    </div>
-                                )}
-                                ){/* </div> */}
+                    <div className="flex w-full min-h-[380px] relative">
+                        {/* Bagian Kiri (Gambar Anatomi) */}
+                        <div className="w-[45%] shrink-0 flex flex-col border-r border-black p-4 print:p-2 bg-gray-50 gap-2">
+                            <div className="text-center font-bold text-gray-400 uppercase tracking-widest text-xs">
+                                Lokasi Kelainan / Anatomi
                             </div>
-                            <div className="flex ml-2">
-                                <div className="mr-1">Sclera Ikterik</div>
-                                {/* <div className="ml-1"> */}
-                                {"("}
-                                {
-                                    isPrinting == false && (
-                                        // <div>
-                                        <input
-                                            className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                            type="text"
-                                            name="sclera_ikterik_1"
-                                            value={
-                                                get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_1
-                                            }
-                                            onChange={
-                                                oc_pemeriksaan_fisik_dan_penunjang
-                                            }
-                                        ></input>
-                                    )
-                                    // </div>
-                                }
-                                {isPrinting && (
-                                    <div>
-                                        {
-                                            get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_1
-                                        }
-                                    </div>
-                                )}
-                                {/* </div> */}
-                                <div className="ml-1">/</div>
-                                {isPrinting == false && (
-                                    <div className="ml-1">
-                                        <input
-                                            className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                            type="text"
-                                            name="sclera_ikterik_2"
-                                            value={
-                                                get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_2
-                                            }
-                                            onChange={
-                                                oc_pemeriksaan_fisik_dan_penunjang
-                                            }
-                                        ></input>
-                                    </div>
-                                )}
-                                {isPrinting && (
-                                    <div className="ml-1">
-                                        {
-                                            get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_2
-                                        }
-                                    </div>
-                                )}
-                                {")"},{/* </div> */}
-                                {/* </div>
-                        } */}
-                            </div>
-                            <div className="flex ml-2">
-                                <div className="mr-1">Conj. Anemis</div>
-                                {/* <div className="ml-1"> */}
-                                {"("}
-                                {isPrinting == false && (
-                                    <input
-                                        className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                        type="text"
-                                        name="conj_anemis_1"
-                                        value={
-                                            get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_1
-                                        }
-                                        onChange={
-                                            oc_pemeriksaan_fisik_dan_penunjang
-                                        }
-                                    ></input>
-                                )}
-                                {isPrinting && (
-                                    <div>
-                                        {
-                                            get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_1
-                                        }
-                                    </div>
-                                )}
-
-                                {/* </div> */}
-                                <div className="ml-1 mr-1">/</div>
-                                {/* <div className="ml-1"> */}
-                                {isPrinting == false && (
-                                    <input
-                                        className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                        type="text"
-                                        name="conj_anemis_2"
-                                        value={
-                                            get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_2
-                                        }
-                                        onChange={
-                                            oc_pemeriksaan_fisik_dan_penunjang
-                                        }
-                                    ></input>
-                                )}
-                                {isPrinting && (
-                                    <div>
-                                        {
-                                            get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_2
-                                        }
-                                    </div>
-                                )}
-                                {")"}
-                                {/* </div> */}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-6 border-solid border-2 col-start-2 col-end-4 text-xxs md:text-sm sm:text-xs">
-                        <div>Leher</div>
-                        {/* <div className="col-start-2 col-span-3"> */}
-                        <div className="flex col-start-2 col-end-7">
-                            <div className="mr-1">
-                                : Perbesaraan Kelenjar Getah Bening
-                            </div>
-                            {/* <div className="ml-1"> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                    type="text"
-                                    name="perbesaran_kelenjar_getah_bening"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.perbesaran_kelenjar_getah_bening
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.perbesaran_kelenjar_getah_bening
-                                    }
-                                </div>
-                            )}
-                            ),
-                            {/* </div> */}
-                            <div className="ml-2 mr-1">Deviasi Trachea</div>
-                            {/* <div> */}
-                            {/* <div className="ml-1"> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                    type="text"
-                                    name="deviasi_trachea"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.deviasi_trachea
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.deviasi_trachea
-                                    }
-                                </div>
-                            )}
-                            ){/* </div> */}
-                            {/* </div> */}
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-6 border-solid border-2 col-start-2 col-end-4 text-xxs md:text-sm sm:text-xs">
-                        <div>Thorax</div>
-                        <div className="flex col-start-2 col-end-7">
-                            <div>: Suara Dasar Veikuler</div>
-                            {/* <div className="ml-1"> */}
-                            {/* <div> */}
-                            {"("}
-                            {isPrinting == false && (
-                                <div>
-                                    <input
-                                        className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                        type="text"
-                                        name="suara_dasar_veikuler_1"
-                                        value={
-                                            get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_1
-                                        }
-                                        onChange={
-                                            oc_pemeriksaan_fisik_dan_penunjang
-                                        }
-                                    ></input>
-                                </div>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_1
-                                    }
-                                </div>
-                            )}
-                            {/* </div> */}
-                            <div>/</div>
-                            {/* <div> */}
-                            {isPrinting == false && (
-                                <div>
-                                    <input
-                                        className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                        type="text"
-                                        name="suara_dasar_veikuler_2"
-                                        value={
-                                            get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_2
-                                        }
-                                        onChange={
-                                            oc_pemeriksaan_fisik_dan_penunjang
-                                        }
-                                    ></input>
-                                </div>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_2
-                                    }
-                                </div>
-                            )}
-                            {"),"}
-                            {/* </div> */}
-                            <div>Rhonki</div>
-                            {/* <div className="ml-1"> */}
-                            {"("}
-                            {isPrinting == false && (
-                                <input
-                                    className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                    type="text"
-                                    name="rhonki_1"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.rhonki_1
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.rhonki_1
-                                    }
-                                </div>
-                            )}
-
-                            {/* </div> */}
-                            <div>/</div>
-                            {/* <div className="ml-1"> */}
-                            {isPrinting == false && (
-                                <input
-                                    className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                    type="text"
-                                    name="rhonki_2"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.rhonki_2
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.rhonki_2
-                                    }
-                                </div>
-                            )}
-
-                            {"),"}
-                            {/* </div> */}
-
-                            <div>Wheezing</div>
-                            {/* <div className="ml-1"> */}
-                            {"("}
-                            {isPrinting == false && (
-                                <input
-                                    className="w-[15px] h-[20px] text-xs md:text-sm sm:text-xs p-0"
-                                    type="text"
-                                    name="wheezing_1"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.wheezing_1
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.wheezing_1
-                                    }
-                                </div>
-                            )}
-
-                            {/* </div> */}
-                            <div>/</div>
-                            {/* <div className="ml-1"> */}
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                    type="text"
-                                    name="wheezing_2"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.wheezing_2
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.wheezing_2
-                                    }
-                                </div>
-                            )}
-
-                            {"),"}
-                            {/* </div> */}
-                        </div>
-                        <div className="flex col-start-2 col-end-7 ml-2">
-                            <div>Bunyi Jantung 1 dan 2</div>
-                            {/* <div className="ml-1"> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                    type="text"
-                                    name="bunyi_jantung_1_2"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2
-                                    }
-                                </div>
-                            )}
-                            ){/* </div> */}
-                            {/* <div className="ml-2"> */}
-                            {isPrinting == false && (
-                                <select
-                                    id="bunyi_jantung_1_2_status"
-                                    className="w-[90px] h-[20px] p-0 text-xs md:text-sm sm:text-xs"
-                                    onChange={
-                                        oc_s_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                    // defaultValue={get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2_status}
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2_status
-                                    }
-                                >
-                                    <option value="-">Pilih</option>
-                                    <option value="normal">Normal</option>
-                                    <option value="abnormal">Abnormal</option>
-                                </select>
-                            )}
-                            {isPrinting && (
-                                <div className="ml-1">
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2_status
-                                    }
-                                </div>
-                            )}
-                            {/* Normal / Abnormal / ... */}
-                            {/* </div> */}
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-6 border-solid border-2 col-start-2 col-end-4 text-xxs md:text-sm sm:text-xs">
-                        <div>Abdomen</div>
-                        <div className="flex col-start-2 col-end-7">
-                            <div>: Bising Usus</div>
-                            {/* <div className="ml-1"> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                    type="text"
-                                    name="bising_usus"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.bising_usus
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.bising_usus
-                                    }
-                                </div>
-                            )}
-                            ){/* </div> */}
-                            <div>
-                                {isPrinting == false && (
-                                    <select
-                                        id="bising_usus_status"
-                                        className="w-[90px] h-[20px] p-0 text-xs md:text-sm sm:text-xs"
-                                        onChange={
-                                            oc_s_pemeriksaan_fisik_dan_penunjang
-                                        }
-                                        // defaultValue={get_data_pemeriksaan_fisik_dan_penunjang.bising_usus_status}>
-                                        value={
-                                            get_data_pemeriksaan_fisik_dan_penunjang.bising_usus_status
-                                        }
+                            <div className="flex-1 relative flex justify-center items-center rounded border border-gray-100 bg-white shadow-inner overflow-hidden">
+                                <img
+                                    src="/gambar/anatomi_tubuh.png"
+                                    className="h-full w-full object-contain mix-blend-multiply opacity-40 absolute pointer-events-none"
+                                    alt="Anatomi"
+                                />
+                                <SignatureCanvas
+                                    penColor="black"
+                                    canvasProps={{
+                                        className: "w-full h-full absolute inset-0 cursor-crosshair z-10",
+                                    }}
+                                    ref={ref_anatomi_tubuh}
+                                    onEnd={oe_anatomi_tubuh}
+                                />
+                                {isPrinting === false && (
+                                    <button
+                                        type="button"
+                                        onClick={oc_hapus_anatomi_tubuh}
+                                        className="print:hidden absolute top-2 right-2 bg-white hover:bg-red-50 text-red-600 px-2 py-1 rounded text-xs font-bold shadow-sm border border-red-200 transition-all z-20"
                                     >
-                                        <option value="-">Pilih</option>
-                                        <option value="normal">Normal</option>
-                                        <option value="abnormal">
-                                            Abnormal
-                                        </option>
-                                    </select>
-                                )}
-                                {isPrinting && (
-                                    <div>
-                                        {
-                                            get_data_pemeriksaan_fisik_dan_penunjang.bising_usus_status
-                                        }
-                                    </div>
+                                        Reset
+                                    </button>
                                 )}
                             </div>
                         </div>
-                        <div className="flex col-start-2 col-end-7 ml-1">
-                            <div className="ml-1">Nyeri Tekan Abdomen</div>
-                            {/* <div className="ml-1"> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                    type="text"
-                                    name="nyeri_tekan_abdomen"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen
-                                    }
+
+                        {/* Bagian Kanan (Form Input) */}
+                        <div className="w-[55%] shrink-0 flex flex-col p-4 print:p-2 gap-3 print:gap-2 text-[11px] md:text-xs">
+                            {/* 1. KEPALA */}
+                            <div className="flex border-b min-h-[45px]">
+                                <div className="w-24 bg-gray-50 border-r p-2 flex items-center font-bold text-gray-600">
+                                    KEPALA
                                 </div>
-                            )}
-                            ){/* </div> */}
-                            <div className="ml-1">pada Area :</div>
-                            {/* <div> */}
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[100px] h-[20px] p-0"
-                                    type="text"
-                                    name="nyeri_tekan_abdomen_area"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen_area
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen_area
-                                    }
-                                </div>
-                            )}
-                            {/* </div> */}
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-6 border-solid border-2 col-start-2 col-end-4 text-xxs md:text-sm sm:text-xs">
-                        <div>Ekstremitas</div>
-                        <div className="flex col-start-2 col-end-7">
-                            <div>: Akral Hangat</div>
-                            <div className="ml-1">
-                                <div>
-                                    <div className="flex">
-                                        <div>
+                                <div className="flex-1 p-2 flex flex-wrap items-center gap-x-4">
+                                    <div className="flex items-center">
+                                        <span>Normocephal (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.normocephal}</span>
+                                        ) : (
                                             <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
+                                                className="w-8 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
                                                 type="text"
-                                                name="akral_hangat_a_1"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_a_1
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                        <div>
-                                            <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                                type="text"
-                                                name="akral_hangat_b_1"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_b_1
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex">
-                                        <div>
-                                            <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                                type="text"
-                                                name="akral_hangat_a_2"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_a_2
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                        <div>
-                                            <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                                type="text"
-                                                name="akral_hangat_b_2"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_b_2
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="ml-2">Oedema</div>
-                            <div className="ml-1">
-                                <div>
-                                    <div className="flex">
-                                        <div>
-                                            <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                                type="text"
-                                                name="oedema_a_1"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.oedema_a_1
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                        <div>
-                                            <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                                type="text"
-                                                name="oedema_b_1"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.oedema_b_1
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex">
-                                        <div>
-                                            <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                                type="text"
-                                                name="oedema_a_2"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.oedema_a_2
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                        <div>
-                                            <input
-                                                className="text-xs md:text-sm sm:text-xs w-[15px] h-[20px] p-0"
-                                                type="text"
-                                                name="oedema_b_2"
-                                                value={
-                                                    get_data_pemeriksaan_fisik_dan_penunjang.oedema_b_2
-                                                }
-                                                onChange={
-                                                    oc_pemeriksaan_fisik_dan_penunjang
-                                                }
-                                            ></input>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-6 border-solid border-2 col-start-2 col-end-4 text-xxs md:text-sm sm:text-xs">
-                        <div>Penunjang</div>
-                        <div className="flex col-start-2 col-end-7">
-                            <div>: EKG :</div>
-                            {/* <div> */}
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[100px] h-[20px] p-0"
-                                    type="text"
-                                    name="ekg"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.ekg
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.ekg
-                                    }
-                                </div>
-                            )}
-                            {/* </div> */}
-                        </div>
-                        <div className="col-start-2 col-end-7 ml-2 flex">
-                            <div>GDS</div>
-                            {/* <div> */}
-                            {"("}
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[25px] h-[20px] p-0"
-                                    type="text"
-                                    name="gds"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.gds
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.gds
-                                    }
-                                </div>
-                            )}
-                            {")"}
-                            {/* </div> */}
-                            <div>AU</div>
-                            {/* <div> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[25px] h-[20px] p-0"
-                                    type="text"
-                                    name="au"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.au
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.au
-                                    }
-                                </div>
-                            )}
-                            ),
-                            {/* </div> */}
-                            <div>CHOL</div>
-                            {/* <div> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[25px] h-[20px] p-0"
-                                    type="text"
-                                    name="chol"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.chol
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.chol
-                                    }
-                                </div>
-                            )}
-                            ),
-                            {/* </div> */}
-                            <div>HB</div>
-                            {/* <div> */}(
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-[25px] h-[20px] p-0"
-                                    type="text"
-                                    name="hb"
-                                    value={
-                                        get_data_pemeriksaan_fisik_dan_penunjang.hb
-                                    }
-                                    onChange={
-                                        oc_pemeriksaan_fisik_dan_penunjang
-                                    }
-                                ></input>
-                            )}
-                            {isPrinting && (
-                                <div>
-                                    {
-                                        get_data_pemeriksaan_fisik_dan_penunjang.hb
-                                    }
-                                </div>
-                            )}
-                            ),
-                            {/* </div> */}
-                        </div>
-                    </div>
-                </div>
-                <div className="grid grid-cols-4 border-solid border-2 mt-3 ml-3 mr-3 text-xs md:text-sm sm:text-xs">
-                    <div className="col-start-1 col-end-1 border-solid border-2">
-                        <div className="flex justify-center border-solid border-2 font-bold">
-                            IV. DIAGNOSIS MEDIS
-                        </div>
-                        {isPrinting &&
-                            get_data_diagnosis_medis.map((data, i) => {
-                                // console.log("i"+i);
-                                return (
-                                    <div key={i + 1} className="flex ">
-                                        <div className="mr-1">{i + 1}.</div>
-                                        <div>{get_data_diagnosis_medis[i]}</div>
-                                    </div>
-                                );
-                            })}
-                        {isPrinting == false && (
-                            <div className="flex justify-center">
-                                <button
-                                    type="button"
-                                    onClick={oc_tambah_diagnosis_medis}
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                >
-                                    Tambah
-                                </button>
-                            </div>
-                        )}
-                        {isPrinting == false &&
-                            get_data_diagnosis_medis.map((data, i) => {
-                                return (
-                                    <div key={i} className="flex">
-                                        <div className="mr-1">{i + 1}.</div>
-                                        <input
-                                            className={`w-full text-xs md:text-sm sm:text-xs p-0 ${kode_diagnosis_medis[i] == "" ? "border border-red-500" : ""}`}
-                                            type="text"
-                                            name="diagnosis_medis"
-                                            list="dl_icd_10"
-                                            value={get_data_diagnosis_medis[i]}
-                                            onChange={(e) =>
-                                                oc_value_diagnosis_medis(e, i)
-                                            }
-                                        />
-                                        <datalist id="dl_icd_10">
-                                            {get_data_icd_10.map((opts, i) => (
-                                                <option
-                                                    key={i}
-                                                    id={opts.id}
-                                                    value={opts.diagnosis}
-                                                >
-                                                    {opts.kode_icd}
-                                                </option>
-                                            ))}
-                                        </datalist>
-                                        <button
-                                            className="w-1/6 text-xs md:text-sm sm:text-xs bg-red-500 hover:bg-red-700 text-white font-bold rounded"
-                                            type="button"
-                                            onClick={() =>
-                                                oc_hapus_diagnosis_medis(i)
-                                            }
-                                        >
-                                            x
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                    </div>
-                    <div className="col-start-2 col-end-4 border-solid border-2 text-xs md:text-sm sm:text-xs">
-                        <div className="border-solid border-2 font-bold flex">
-                            {isPrinting == false && (
-                                <div className="flex">
-                                    <div className="w-full">
-                                        V. TERAPI / TINDAKAN / KONSUL :
-                                    </div>
-                                    <div className="flex">
-                                        <input
-                                            type="text"
-                                            className="w-full h-full text-xs md:text-sm sm:text-xs p-0"
-                                            name="terapi_tindakan_konsul_dr"
-                                            value={
-                                                get_terapi_tindakan_konsul_dr
-                                            }
-                                            onChange={(e) =>
-                                                set_terapi_tindakan_konsul_dr(
-                                                    e.target.value,
-                                                )
-                                            }
-                                        ></input>
-                                    </div>
-                                </div>
-                            )}
-                            {isPrinting && (
-                                <div className="flex">
-                                    <div className="text-xs md:text-sm sm:text-xs">
-                                        V. TERAPI / TINDAKAN / KONSUL :
-                                    </div>
-                                    {get_terapi_tindakan_konsul_dr}
-                                </div>
-                            )}
-                        </div>
-                        {isPrinting == false && (
-                            <div className="flex justify-center">
-                                <button
-                                    type="button"
-                                    onClick={oc_tambah_terapi_tindakan_konsul}
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                >
-                                    Tambah
-                                </button>
-                            </div>
-                        )}
-                        {isPrinting == false &&
-                            get_terapi_tindakan_konsul.map((data, i) => {
-                                return (
-                                    <div key={i} className="flex">
-                                        <div className="mr-1">{i + 1}.</div>
-                                        <input
-                                            className="w-5/6 text-xs md:text-sm sm:text-xs p-0"
-                                            type="text"
-                                            value={
-                                                get_terapi_tindakan_konsul[i]
-                                            }
-                                            onChange={(e) =>
-                                                oc_value_terapi_tindakan_konsul(
-                                                    e,
-                                                    i,
-                                                )
-                                            }
-                                            list="dl_icd_9"
-                                        ></input>
-                                        <datalist id="dl_icd_9">
-                                            {get_data_icd_9.map((opts, i) => (
-                                                <option
-                                                    key={i}
-                                                    id={opts.id}
-                                                    value={opts.diagnosa}
-                                                >
-                                                    {opts.kode}
-                                                </option>
-                                            ))}
-                                        </datalist>
-                                        <button
-                                            className="w-1/6 text-xs md:text-sm sm:text-xs bg-red-500 hover:bg-red-700 text-white font-bold rounded"
-                                            type="button"
-                                            onClick={() =>
-                                                oc_hapus_terapi_tindakan_konsul(
-                                                    i,
-                                                )
-                                            }
-                                        >
-                                            x
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        {isPrinting &&
-                            get_terapi_tindakan_konsul.map((data, i) => {
-                                return (
-                                    <div key={i} className="flex">
-                                        <div className="mr-1">{i + 1}.</div>
-                                        <div>
-                                            {get_terapi_tindakan_konsul[i]}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                    </div>
-                    <Tanda_Vital
-                        judul="FOLLOW UP TANDA VITAL"
-                        onSubmit={getData_FollowUpTandaVital}
-                        isPrinting={isPrinting}
-                        id={id}
-                    />
-                </div>
-                <div className="grid grid-cols-4 border-solid border-2 mt-3 ml-3 mr-3 text-xxs md:text-sm sm:text-xs">
-                    <div className="border-solid border-2">
-                        {pilih_rumah_sakit_rujukan == "true" && (
-                            <div>
-                                <div className="flex justify-center border-solid border-2 font-bold">
-                                    RUMAH SAKIT RUJUKAN
-                                </div>
-                                <div className="grid grid-cols-5">
-                                    <div>RS</div>
-                                    <div className="flex col-span-4">
-                                        :
-                                        {isPrinting && (
-                                            <div>
-                                                {
-                                                    get_data_rumah_sakit_rujukan.rs
-                                                }
-                                            </div>
+                                                name="normocephal"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.normocephal}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
                                         )}
-                                        {
-                                            isPrinting == false && (
-                                                <>
-                                                    <input
-                                                        className={`w-full text-xs md:text-sm sm:text-xs p-0}`}
-                                                        type="text"
-                                                        name="rs"
-                                                        list="dl_rs_rujukan"
-                                                        value={
-                                                            get_data_rumah_sakit_rujukan.rs
-                                                        }
-                                                        onChange={
-                                                            oc_data_rumah_sakit_rujukan
-                                                        }
-                                                    />
-                                                    <datalist id="dl_rs_rujukan">
-                                                        {rs_rujukan.map(
-                                                            (opts, i) => (
-                                                                <option
-                                                                    key={i}
-                                                                    id={opts.id}
-                                                                    value={
-                                                                        opts.nama
-                                                                    }
-                                                                >
-                                                                    {opts.nama}
-                                                                </option>
-                                                            ),
-                                                        )}
-                                                    </datalist>
-                                                </>
-                                            )
-                                            // <input className="w-full text-xs md:text-sm sm:text-xs"
-                                            // type="text"
-                                            // name="rs"
-                                            // value={get_data_rumah_sakit_rujukan.rs}
-                                            // onChange={oc_data_rumah_sakit_rujukan} />
-                                        }
+                                        <span>)</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span>Sclera Ikterik (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_1}</span>
+                                        ) : (
+                                            <input
+                                                className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="sclera_ikterik_1"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_1}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span className="mx-1">/</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_2}</span>
+                                        ) : (
+                                            <input
+                                                className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="sclera_ikterik_2"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.sclera_ikterik_2}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span>),</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span>Conj. Anemis (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_1}</span>
+                                        ) : (
+                                            <input
+                                                className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="conj_anemis_1"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_1}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span className="mx-1">/</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_2}</span>
+                                        ) : (
+                                            <input
+                                                className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="conj_anemis_2"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.conj_anemis_2}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span>)</span>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-5">
-                                    <div>Tgl</div>
-                                    <div className="flex col-span-4">
-                                        :
-                                        {isPrinting && (
-                                            <div>
-                                                {
-                                                    get_data_rumah_sakit_rujukan.tgl_baru
-                                                }
-                                            </div>
-                                        )}
-                                        {isPrinting == false && (
+                            </div>
+
+                            {/* 2. LEHER */}
+                            <div className="flex border-b min-h-[45px]">
+                                <div className="w-24 bg-gray-50 border-r p-2 flex items-center font-bold text-gray-600">
+                                    LEHER
+                                </div>
+                                <div className="flex-1 p-2 flex flex-wrap items-center gap-x-4">
+                                    <div className="flex items-center">
+                                        <span>Pembesaran KGB (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.perbesaran_kelenjar_getah_bening}</span>
+                                        ) : (
                                             <input
-                                                className="w-full text-xs md:text-sm sm:text-xs"
-                                                type="date"
-                                                name="tgl"
-                                                value={
-                                                    get_data_rumah_sakit_rujukan.tgl
-                                                }
-                                                onChange={
-                                                    oc_data_rumah_sakit_rujukan
-                                                }
+                                                className="w-8 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="perbesaran_kelenjar_getah_bening"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.perbesaran_kelenjar_getah_bening}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span>),</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span>Deviasi Trachea (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.deviasi_trachea}</span>
+                                        ) : (
+                                            <input
+                                                className="w-8 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="deviasi_trachea"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.deviasi_trachea}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span>)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 3. THORAX */}
+                            <div className="flex border-b min-h-[45px]">
+                                <div className="w-24 bg-gray-50 border-r p-2 flex items-center font-bold text-gray-600">
+                                    THORAX
+                                </div>
+                                <div className="flex-1 p-2 flex flex-col gap-2">
+                                    <div className="flex flex-wrap items-center gap-x-4">
+                                        <div className="flex items-center">
+                                            <span>SD Vesikuler (</span>
+                                            {isPrinting ? (
+                                                <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_1}</span>
+                                            ) : (
+                                                <input
+                                                    className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                    type="text"
+                                                    name="suara_dasar_veikuler_1"
+                                                    value={get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_1}
+                                                    onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                                />
+                                            )}
+                                            <span className="mx-1">/</span>
+                                            {isPrinting ? (
+                                                <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_2}</span>
+                                            ) : (
+                                                <input
+                                                    className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                    type="text"
+                                                    name="suara_dasar_veikuler_2"
+                                                    value={get_data_pemeriksaan_fisik_dan_penunjang.suara_dasar_veikuler_2}
+                                                    onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                                />
+                                            )}
+                                            <span>),</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <span>Rhonki (</span>
+                                            {isPrinting ? (
+                                                <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.rhonki_1}</span>
+                                            ) : (
+                                                <input
+                                                    className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                    type="text"
+                                                    name="rhonki_1"
+                                                    value={get_data_pemeriksaan_fisik_dan_penunjang.rhonki_1}
+                                                    onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                                />
+                                            )}
+                                            <span className="mx-1">/</span>
+                                            {isPrinting ? (
+                                                <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.rhonki_2}</span>
+                                            ) : (
+                                                <input
+                                                    className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                    type="text"
+                                                    name="rhonki_2"
+                                                    value={get_data_pemeriksaan_fisik_dan_penunjang.rhonki_2}
+                                                    onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                                />
+                                            )}
+                                            <span>),</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <span>Wheezing (</span>
+                                            {isPrinting ? (
+                                                <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.wheezing_1}</span>
+                                            ) : (
+                                                <input
+                                                    className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                    type="text"
+                                                    name="wheezing_1"
+                                                    value={get_data_pemeriksaan_fisik_dan_penunjang.wheezing_1}
+                                                    onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                                />
+                                            )}
+                                            <span className="mx-1">/</span>
+                                            {isPrinting ? (
+                                                <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.wheezing_2}</span>
+                                            ) : (
+                                                <input
+                                                    className="w-6 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                    type="text"
+                                                    name="wheezing_2"
+                                                    value={get_data_pemeriksaan_fisik_dan_penunjang.wheezing_2}
+                                                    onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                                />
+                                            )}
+                                            <span>)</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-x-2 mt-1">
+                                        <span>Bunyi Jantung 1 & 2 (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2}</span>
+                                        ) : (
+                                            <input
+                                                className="w-8 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="bunyi_jantung_1_2"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span>)</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded ml-2">{get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2_status}</span>
+                                        ) : (
+                                            <select
+                                                id="bunyi_jantung_1_2_status"
+                                                className="w-24 h-6 p-0 text-[11px] md:text-xs bg-gray-50 border-gray-300 rounded focus:ring-blue-500 ml-2"
+                                                onChange={oc_s_pemeriksaan_fisik_dan_penunjang}
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.bunyi_jantung_1_2_status}
+                                            >
+                                                <option value="-">Pilih</option>
+                                                <option value="normal">Normal</option>
+                                                <option value="abnormal">Abnormal</option>
+                                            </select>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 4. ABDOMEN */}
+                            <div className="flex border-b min-h-[45px]">
+                                <div className="w-24 bg-gray-50 border-r p-2 flex items-center font-bold text-gray-600">
+                                    ABDOMEN
+                                </div>
+                                <div className="flex-1 p-2 flex flex-col gap-2">
+                                    <div className="flex items-center gap-x-2">
+                                        <span>Bising Usus (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.bising_usus}</span>
+                                        ) : (
+                                            <input
+                                                className="w-8 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="bising_usus"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.bising_usus}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span>)</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded ml-2">{get_data_pemeriksaan_fisik_dan_penunjang.bising_usus_status}</span>
+                                        ) : (
+                                            <select
+                                                id="bising_usus_status"
+                                                className="w-24 h-6 p-0 text-[11px] md:text-xs bg-gray-50 border-gray-300 rounded focus:ring-blue-500 ml-2"
+                                                onChange={oc_s_pemeriksaan_fisik_dan_penunjang}
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.bising_usus_status}
+                                            >
+                                                <option value="-">Pilih</option>
+                                                <option value="normal">Normal</option>
+                                                <option value="abnormal">Abnormal</option>
+                                            </select>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center w-full mt-1">
+                                        <span>Nyeri Tekan (</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold px-1">{get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen}</span>
+                                        ) : (
+                                            <input
+                                                className="w-8 border-b border-gray-300 text-center focus:ring-0 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="nyeri_tekan_abdomen"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                        <span>)</span>
+                                        <span className="ml-3 mr-2 text-gray-500 italic">Area:</span>
+                                        {isPrinting ? (
+                                            <span className="font-bold border-b border-gray-400 min-w-[50px] inline-block px-1">{get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen_area}</span>
+                                        ) : (
+                                            <input
+                                                className="flex-1 min-w-[50px] border-0 border-b border-dotted border-gray-400 bg-transparent focus:ring-0 focus:border-blue-500 p-0 text-[11px] md:text-xs"
+                                                type="text"
+                                                name="nyeri_tekan_abdomen_area"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.nyeri_tekan_abdomen_area}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                                placeholder="..."
                                             />
                                         )}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-5">
-                                    <div>Jam</div>
-                                    <div className="flex col-span-4">
-                                        :
-                                        {isPrinting && (
-                                            <div>
-                                                {
-                                                    get_data_rumah_sakit_rujukan.jam
-                                                }
-                                            </div>
+                            </div>
+
+                            {/* 5. EKSTREMITAS */}
+                            <div className="flex border-b min-h-[45px]">
+                                <div className="w-24 bg-gray-50 border-r p-2 flex items-center font-bold text-gray-600">
+                                    EKSTREMITAS
+                                </div>
+                                <div className="flex-1 p-2 flex gap-8 items-center justify-start ml-4">
+                                    <div className="flex flex-col items-center">
+                                        <div className="text-gray-500 mb-2 font-bold text-[10px]">Akral Hangat</div>
+                                        <div className="flex gap-1 mb-1">
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_a_1}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="akral_hangat_a_1" value={get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_a_1} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_b_1}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="akral_hangat_b_1" value={get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_b_1} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                        </div>
+                                        <div className="flex gap-1">
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_a_2}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="akral_hangat_a_2" value={get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_a_2} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_b_2}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="akral_hangat_b_2" value={get_data_pemeriksaan_fisik_dan_penunjang.akral_hangat_b_2} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <div className="text-gray-500 mb-2 font-bold text-[10px]">Oedema</div>
+                                        <div className="flex gap-1 mb-1">
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.oedema_a_1}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="oedema_a_1" value={get_data_pemeriksaan_fisik_dan_penunjang.oedema_a_1} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.oedema_b_1}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="oedema_b_1" value={get_data_pemeriksaan_fisik_dan_penunjang.oedema_b_1} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                        </div>
+                                        <div className="flex gap-1">
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.oedema_a_2}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="oedema_a_2" value={get_data_pemeriksaan_fisik_dan_penunjang.oedema_a_2} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                            {isPrinting ? (
+                                                <span className="w-6 h-6 border border-gray-300 flex items-center justify-center font-bold bg-white shadow-sm">{get_data_pemeriksaan_fisik_dan_penunjang.oedema_b_2}</span>
+                                            ) : (
+                                                <input className="w-6 h-6 border border-gray-300 text-center p-0 focus:ring-0 focus:border-blue-500 text-[11px] md:text-xs" type="text" name="oedema_b_2" value={get_data_pemeriksaan_fisik_dan_penunjang.oedema_b_2} onChange={oc_pemeriksaan_fisik_dan_penunjang} />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 6. PENUNJANG */}
+                            <div className="flex min-h-[60px] bg-blue-50/30">
+                                <div className="w-24 border-r border-blue-100 p-2 flex items-center font-bold text-blue-800">
+                                    PENUNJANG
+                                </div>
+                                <div className="flex-1 p-3 grid grid-cols-4 gap-4">
+                                    <div className="flex flex-col">
+                                        <label className="text-[10px] text-blue-600 font-bold mb-1">EKG</label>
+                                        {isPrinting ? (
+                                            <div className="font-bold text-xs border-b border-blue-200 min-h-[20px] pb-1">{get_data_pemeriksaan_fisik_dan_penunjang.ekg}</div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="w-full border-0 border-b border-blue-200 bg-transparent focus:ring-0 focus:border-blue-500 p-0 text-[11px] md:text-xs pb-1"
+                                                name="ekg"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.ekg}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
                                         )}
-                                        {isPrinting == false && (
-                                            <LocalizationProvider
-                                                dateAdapter={AdapterDayjs}
-                                            >
-                                                {/* <MobileTimePicker value={get_jam_rs_rujukan} onChange={oc_data_rumah_sakit_rujukan} ampm={false} slotProps={{ */}
-                                                <MobileTimePicker
-                                                    value={
-                                                        get_data_rumah_sakit_rujukan.in_jam
-                                                    }
-                                                    onChange={
-                                                        oc_data_rumah_sakit_rujukan
-                                                    }
-                                                    ampm={false}
-                                                    slotProps={{
-                                                        textField: {
-                                                            size: "small",
-                                                        },
-                                                    }}
-                                                />
-                                            </LocalizationProvider>
+                                        <label className="text-[10px] text-blue-600 font-bold mt-2 mb-1">HB</label>
+                                        {isPrinting ? (
+                                            <div className="font-bold text-xs border-b border-blue-200 min-h-[20px] pb-1">{get_data_pemeriksaan_fisik_dan_penunjang.hb}</div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="w-full border-0 border-b border-blue-200 bg-transparent focus:ring-0 focus:border-blue-500 p-0 text-[11px] md:text-xs pb-1"
+                                                name="hb"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.hb}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <label className="text-[10px] text-blue-600 font-bold mb-1">GDS</label>
+                                        {isPrinting ? (
+                                            <div className="font-bold text-xs border-b border-blue-200 min-h-[20px] pb-1">{get_data_pemeriksaan_fisik_dan_penunjang.gds}</div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="w-full border-0 border-b border-blue-200 bg-transparent focus:ring-0 focus:border-blue-500 p-0 text-[11px] md:text-xs pb-1"
+                                                name="gds"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.gds}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <label className="text-[10px] text-blue-600 font-bold mb-1">AU</label>
+                                        {isPrinting ? (
+                                            <div className="font-bold text-xs border-b border-blue-200 min-h-[20px] pb-1">{get_data_pemeriksaan_fisik_dan_penunjang.au}</div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="w-full border-0 border-b border-blue-200 bg-transparent focus:ring-0 focus:border-blue-500 p-0 text-[11px] md:text-xs pb-1"
+                                                name="au"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.au}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <label className="text-[10px] text-blue-600 font-bold mb-1">CHOL</label>
+                                        {isPrinting ? (
+                                            <div className="font-bold text-xs border-b border-blue-200 min-h-[20px] pb-1">{get_data_pemeriksaan_fisik_dan_penunjang.chol}</div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="w-full border-0 border-b border-blue-200 bg-transparent focus:ring-0 focus:border-blue-500 p-0 text-[11px] md:text-xs pb-1"
+                                                name="chol"
+                                                value={get_data_pemeriksaan_fisik_dan_penunjang.chol}
+                                                onChange={oc_pemeriksaan_fisik_dan_penunjang}
+                                            />
                                         )}
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                    <div className="relative border-solid border-2">
-                        <div className="flex justify-center text-xxs md:text-sm sm:text-xs">
-                            Petugas Ambulance Hebat,
                         </div>
-                        {/* {
-                    isPrinting == false && */}
-                        <div className="relative w-full">
-                            {isPrinting === false && (
-                                <button type="button" onClick={oc_hapus_ttd_petugas_ambulance} className="absolute top-0 right-0 text-red-500 font-bold px-2 py-1 text-lg z-10" title="Hapus Tanda Tangan">X</button>
+                    </div>
+                </div>
+                <div className="flex w-full gap-0 border border-black p-1 mb-1 shadow-sm text-sm bg-white print:break-inside-avoid text-xs md:text-sm sm:text-xs mx-3 w-[calc(100%-1.5rem)]">
+                    {/* DIAGNOSIS MEDIS */}
+                    <div className="w-1/3 shrink-0 border-r border-black flex flex-col p-4 print:p-2">
+                        <div className="font-bold text-center border-b border-black mb-3 print:mb-1 pb-1 uppercase text-blue-900 tracking-tighter text-sm">
+                            IV. DIAGNOSIS MEDIS
+                        </div>
+                        <div className="flex flex-col gap-2.5 print:gap-1.5 flex-1 overflow-hidden">
+                            <datalist id="dl_icd_10">
+                                {get_data_icd_10.map((opts, i) => (
+                                    <option key={i} id={opts.id} value={opts.diagnosis}>
+                                        {opts.kode_icd}
+                                    </option>
+                                ))}
+                            </datalist>
+                            {!isPrinting && (
+                                <button
+                                    type="button"
+                                    onClick={oc_tambah_diagnosis_medis}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold py-1 px-2 rounded mb-2 w-max shadow-sm transition-colors self-center"
+                                >
+                                    + Tambah Diagnosis
+                                </button>
+                            )}
+                            {get_data_diagnosis_medis.map((val, i) => (
+                                <div className="flex items-center gap-2 w-full group" key={i}>
+                                    <span className="w-4 shrink-0 font-bold text-gray-300 text-xs">{i + 1}.</span>
+                                    {isPrinting ? (
+                                        <div className="flex-1 text-sm font-bold border-b border-dashed border-gray-400">{val}</div>
+                                    ) : (
+                                        <input
+                                            className={`flex-1 w-full min-w-0 border-0 border-b-[2px] border-dotted border-gray-400 bg-transparent text-sm font-bold outline-none focus:border-blue-500 focus:ring-0 transition-all shadow-none ${kode_diagnosis_medis[i] == "" ? "border-red-500" : ""}`}
+                                            type="text"
+                                            name="diagnosis_medis"
+                                            list="dl_icd_10"
+                                            value={val}
+                                            onChange={(e) => oc_value_diagnosis_medis(e, i)}
+                                        />
+                                    )}
+                                    {!isPrinting && (
+                                        <button
+                                            type="button"
+                                            onClick={() => oc_hapus_diagnosis_medis(i)}
+                                            className="text-red-400 hover:text-red-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* TERAPI / TINDAKAN */}
+                    <div className="w-1/3 shrink-0 border-r border-black flex flex-col p-4 print:p-2 bg-gray-50">
+                        <div className="font-bold text-center border-b border-black mb-3 print:mb-1 pb-1 uppercase text-green-900 tracking-tighter text-sm">
+                            V. TERAPI / TINDAKAN / KONSUL
+                        </div>
+                        <div className="flex flex-col gap-2.5 print:gap-1.5 flex-1 overflow-hidden">
+                            {!isPrinting && (
+                                <div className="flex w-full mb-2">
+                                    <input
+                                        type="text"
+                                        className="w-full text-xs md:text-sm p-1 border border-gray-300 rounded"
+                                        name="terapi_tindakan_konsul_dr"
+                                        value={get_terapi_tindakan_konsul_dr}
+                                        onChange={(e) => set_terapi_tindakan_konsul_dr(e.target.value)}
+                                        placeholder="Terapi dari Dokter..."
+                                    />
+                                </div>
+                            )}
+                            {isPrinting && get_terapi_tindakan_konsul_dr && (
+                                <div className="font-bold text-sm mb-2 pb-1 border-b border-gray-300">
+                                    {get_terapi_tindakan_konsul_dr}
+                                </div>
+                            )}
+                            
+                            <datalist id="dl_icd_9">
+                                {get_data_icd_9.map((opts, i) => (
+                                    <option key={i} id={opts.id} value={opts.diagnosa}>
+                                        {opts.kode}
+                                    </option>
+                                ))}
+                            </datalist>
+
+                            {!isPrinting && (
+                                <button
+                                    type="button"
+                                    onClick={oc_tambah_terapi_tindakan_konsul}
+                                    className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold py-1 px-2 rounded mb-2 w-max shadow-sm transition-colors self-center"
+                                >
+                                    + Tambah Terapi
+                                </button>
+                            )}
+                            {get_terapi_tindakan_konsul.map((val, i) => (
+                                <div className="flex items-center gap-2 w-full group" key={i}>
+                                    <span className="w-4 shrink-0 font-bold text-gray-300 text-center text-xs">{i + 1}.</span>
+                                    {isPrinting ? (
+                                        <div className="flex-1 text-sm font-bold border-b border-dashed border-gray-400">{val}</div>
+                                    ) : (
+                                        <input
+                                            className="flex-1 w-full min-w-0 border-0 border-b-[2px] border-dotted border-gray-400 bg-transparent text-sm font-bold outline-none focus:border-green-500 focus:ring-0 transition-all shadow-none"
+                                            value={val}
+                                            list="dl_icd_9"
+                                            onChange={(e) => oc_value_terapi_tindakan_konsul(e, i)}
+                                        />
+                                    )}
+                                    {!isPrinting && (
+                                        <button
+                                            type="button"
+                                            onClick={() => oc_hapus_terapi_tindakan_konsul(i)}
+                                            className="text-red-400 hover:text-red-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* FOLLOW UP VITAL */}
+                    <div className="w-1/3 shrink-0 flex flex-col bg-gray-50 text-[10px] md:text-[11px] overflow-hidden justify-start p-1 relative">
+                        <div className="absolute inset-0 overflow-y-auto w-full h-full custom-scrollbar-hide">
+                            <Tanda_Vital
+                                judul="FOLLOW UP TANDA VITAL"
+                                onSubmit={getData_FollowUpTandaVital}
+                                isPrinting={isPrinting}
+                                id={id}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* FOOTER */}
+                <div className="flex w-full text-xs items-stretch gap-3 print:gap-1.5 pb-2 print:pb-0 mt-2 print:mt-0.5 print:break-inside-avoid mx-3 w-[calc(100%-1.5rem)]">
+                    <div className="flex-1 p-3 print:p-2 bg-gray-50 border border-black p-1 rounded-sm shadow-inner overflow-hidden">
+                        <div className="font-bold border-b border-blue-800 mb-2 print:mb-1 pb-1 tracking-widest uppercase text-blue-900 text-sm">
+                            RUMAH SAKIT RUJUKAN
+                        </div>
+                        <div className="flex flex-col gap-2 print:gap-1">
+                            <div className="flex items-center text-sm mb-2">
+                                <span className="w-24 font-bold text-gray-600">Dirujuk?</span>
+                                <span className="mx-1">:</span>
+                                {isPrinting ? (
+                                    <div className="font-bold">{pilih_rumah_sakit_rujukan === "true" ? "Ya" : "Tidak"}</div>
+                                ) : (
+                                    <select
+                                        id="pilih_rumah_sakit_rujukan"
+                                        className="border-0 border-b border-dotted border-gray-300 bg-transparent font-bold outline-none focus:border-blue-500 focus:ring-0 transition-all shadow-none p-0 py-1"
+                                        onChange={(e) => set_pilih_rumah_sakit_rujukan(e.target.value)}
+                                        value={pilih_rumah_sakit_rujukan}
+                                    >
+                                        <option value="true">Rujukan</option>
+                                        <option value="false">Tidak Rujukan</option>
+                                    </select>
+                                )}
+                            </div>
+                            
+                            {pilih_rumah_sakit_rujukan === "true" && (
+                                <>
+                                    <div className="flex items-center text-sm">
+                                        <span className="w-24 font-bold text-gray-600">Nama RS</span>
+                                        <span className="mx-1">:</span>
+                                        <div className="flex-1 flex flex-col">
+                                            {isPrinting ? (
+                                                <div className="font-bold">{get_data_rumah_sakit_rujukan.rs}</div>
+                                            ) : (
+                                                <>
+                                                    <input
+                                                        type="text"
+                                                        list="dl_rs_rujukan"
+                                                        name="rs"
+                                                        className="w-full border-0 border-b border-dotted border-gray-300 bg-transparent font-bold outline-none focus:border-blue-500 focus:ring-0 transition-all shadow-none p-0 py-1"
+                                                        placeholder="Ketik atau pilih RS/Puskesmas..."
+                                                        value={get_data_rumah_sakit_rujukan.rs}
+                                                        onChange={oc_data_rumah_sakit_rujukan}
+                                                    />
+                                                    <datalist id="dl_rs_rujukan">
+                                                        {rs_rujukan.map((opts, i) => (
+                                                            <option key={i} id={opts.id} value={opts.nama}>{opts.nama}</option>
+                                                        ))}
+                                                    </datalist>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center text-sm">
+                                        <span className="w-24 font-bold text-gray-600">Jam Tiba</span>
+                                        <span className="mx-1">:</span>
+                                        {isPrinting ? (
+                                            <div className="font-bold">{get_data_rumah_sakit_rujukan.waktu}</div>
+                                        ) : (
+                                            <input
+                                                className="border-0 border-b border-dotted border-gray-300 flex-1 bg-transparent outline-none focus:border-blue-500 focus:ring-0 transition-all font-bold shadow-none p-0 py-1"
+                                                type="time"
+                                                name="waktu"
+                                                value={get_data_rumah_sakit_rujukan.waktu}
+                                                onChange={oc_data_rumah_sakit_rujukan}
+                                            />
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="w-1/3 flex flex-col items-center p-2 text-center bg-white border border-black shadow-sm rounded-sm">
+                        <div className="font-bold mb-2 print:mb-1 text-gray-700 uppercase text-xs tracking-widest border-b border-gray-100 w-full pb-1">
+                            Petugas Ambulance
+                        </div>
+                        <div className="w-full h-24 print:h-12 border border-gray-50 relative group overflow-hidden mb-6">
+                            {!isPrinting && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        ref_ttd_petugas_ambulance.current.clear();
+                                    }}
+                                    className="print:hidden absolute top-0 right-0 bg-white text-red-500 p-1 rounded-full shadow-sm z-10 opacity-0 group-hover:opacity-100 border border-red-50 transition-all"
+                                >
+                                    ✕
+                                </button>
                             )}
                             <SignatureCanvas
-                                canvasProps={{
-                                    className: "sigCanvas w-full h-full",
-                                }}
+                                penColor="black"
                                 ref={ref_ttd_petugas_ambulance}
                                 onEnd={oe_ttd_petugas_ambulance}
+                                canvasProps={{
+                                    className: "w-full h-full absolute inset-0 cursor-crosshair",
+                                }}
                             />
                         </div>
-                        {/* } */}
-                        {/* {
-                    isPrinting &&
-                    // <div>{get_url_ttd_petugas_ambulance}</div>
-                    <div className="flex justify-center">
-                    <img src={get_url_ttd_petugas_ambulance}/>
+                        {isPrinting ? (
+                            <div className="w-[80%] border-b border-black font-bold text-xs">{get_data_nama_ttd_petugas_ambulance_hebat}</div>
+                        ) : (
+                            <input
+                                type="text"
+                                className="w-[80%] border-0 border-b border-gray-300 text-center outline-none bg-transparent font-bold py-0 text-xs focus:border-blue-500 focus:ring-0 transition-all shadow-none p-0"
+                                placeholder="(Nama Terang)"
+                                value={get_data_nama_ttd_petugas_ambulance_hebat}
+                                onChange={(e) => set_data_nama_ttd_petugas_ambulance_hebat(e.target.value)}
+                            />
+                        )}
+                        <div className="text-[10px] mt-1 text-gray-500">PSC 119</div>
                     </div>
-                    // <img src={get_ttd_petugas_ambulance.getTrimmedCanvas().toDataURL('image/png')}/>
-                } */}
-                        {/* <div className="absolute inset-x-0 bottom-0"> */}
-                        <div>
-                            {isPrinting && (
-                                <div className="flex justify-center">
-                                    {get_data_nama_ttd_petugas_ambulance_hebat}
-                                </div>
-                            )}
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-full"
-                                    type="text"
-                                    name="petugas_ambulance_hebat"
-                                    onChange={(e) =>
-                                        set_data_nama_ttd_petugas_ambulance_hebat(
-                                            e.target.value,
-                                        )
-                                    }
-                                    value={
-                                        get_data_nama_ttd_petugas_ambulance_hebat
-                                    }
-                                />
+
+                    <div className="w-1/3 flex flex-col items-center p-2 text-center bg-white border border-black shadow-sm rounded-sm">
+                        <div className="font-bold mb-2 print:mb-1 text-gray-700 uppercase text-[10px] md:text-xs tracking-widest border-b border-gray-100 w-full pb-1">
+                            {isPrinting ? (
+                                get_data_keluarga_pasien_petugas_rs
+                            ) : (
+                                <select
+                                    className="w-full border-none p-0 py-1 text-center font-bold text-gray-700 bg-transparent uppercase text-[10px] md:text-xs tracking-widest focus:ring-0"
+                                    value={get_data_keluarga_pasien_petugas_rs}
+                                    onChange={(e) => set_data_keluarga_pasien_petugas_rs(e.target.value)}
+                                >
+                                    <option value="Petugas RS">Petugas RS</option>
+                                    <option value="Keluarga Pasien">Keluarga Pasien</option>
+                                </select>
                             )}
                         </div>
-                    </div>
-                    {/* <div className="border-solid border-2 flex justify-center cols-start-3">Keluarga Pasien / Petugas RS,</div> */}
-                    <div className="relative border-solid border-2">
-                        {isPrinting == false && (
-                            <div className="flex justify-center">
-                                <select
-                                    id="keluarga_pasien_petugas_rs"
-                                    className="w-full text-xxs md:text-sm sm:text-xs p-0"
-                                    onChange={(e) =>
-                                        set_data_keluarga_pasien_petugas_rs(
-                                            e.target.value,
-                                        )
-                                    }
-                                    // defaultValue={get_data_keluarga_pasien_petugas_rs}
-                                    value={get_data_keluarga_pasien_petugas_rs}
+                        <div className="w-full h-24 print:h-12 border border-gray-50 relative group overflow-hidden mb-6">
+                            {!isPrinting && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        ref_ttd_keluarga_pasien_petugas_rs.current.clear();
+                                    }}
+                                    className="print:hidden absolute top-0 right-0 bg-white text-red-500 p-1 rounded-full shadow-sm z-10 opacity-0 group-hover:opacity-100 border border-red-50 transition-all"
                                 >
-                                    <option value="Petugas RS">
-                                        Petugas RS
-                                    </option>
-                                    <option value="Keluarga Pasien">
-                                        Keluarga Pasien
-                                    </option>
-                                </select>
-                            </div>
-                        )}
-                        {isPrinting && (
-                            <div className="flex justify-center">
-                                {get_data_keluarga_pasien_petugas_rs}
-                            </div>
-                        )}
-                        <div className="relative">
-                            {isPrinting === false && (
-                                <button type="button" onClick={oc_hapus_ttd_keluarga_pasien_atau_petugas_rs} className="absolute top-0 right-0 text-red-500 font-bold px-2 py-1 text-lg z-10" title="Hapus Tanda Tangan">X</button>
+                                    ✕
+                                </button>
                             )}
                             <SignatureCanvas
-                                canvasProps={{
-                                    className: "sigCanvas w-full h-full",
-                                }}
+                                penColor="black"
                                 ref={ref_ttd_keluarga_pasien_petugas_rs}
                                 onEnd={oe_ttd_keluarga_pasien_petugas_rs}
+                                canvasProps={{
+                                    className: "w-full h-full absolute inset-0 cursor-crosshair",
+                                }}
                             />
                         </div>
-                        <div>
-                            {isPrinting && (
-                                <div className="flex justify-center">
-                                    {
-                                        get_data_nama_ttd_keluarga_pasien_petugas_rs
-                                    }
-                                </div>
-                            )}
-                            {isPrinting == false && (
-                                <input
-                                    className="text-xs md:text-sm sm:text-xs w-full"
-                                    type="text"
-                                    name="keluarga_pasien_petugas_rs"
-                                    onChange={(e) =>
-                                        set_data_nama_ttd_keluarga_pasien_petugas_rs(
-                                            e.target.value,
-                                        )
-                                    }
-                                    value={
-                                        get_data_nama_ttd_keluarga_pasien_petugas_rs
-                                    }
-                                />
-                            )}
-                        </div>
-                    </div>
-                    <div className="border-solid border-2 flex justify-center">
-                        PSC 119
+                        {isPrinting ? (
+                            <div className="w-[80%] border-b border-black font-bold text-xs">{get_data_nama_ttd_keluarga_pasien_petugas_rs}</div>
+                        ) : (
+                            <input
+                                type="text"
+                                className="w-[80%] border-0 border-b border-gray-300 text-center outline-none bg-transparent font-bold py-0 text-xs focus:border-blue-500 focus:ring-0 transition-all shadow-none p-0"
+                                placeholder="(Nama Terang)"
+                                value={get_data_nama_ttd_keluarga_pasien_petugas_rs}
+                                onChange={(e) => set_data_nama_ttd_keluarga_pasien_petugas_rs(e.target.value)}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

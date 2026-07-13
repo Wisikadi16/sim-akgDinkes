@@ -234,8 +234,8 @@ export default function Form_CM_DOA(props) {
                             petugas_perawat: normalizeField(row.petugas_perawat),
                             petugas_bidan: normalizeField(row.petugas_bidan),
                             petugas_driver: normalizeField(row.petugas_driver),
-                            petugas_nakes_1: normalizeField(row.petugas_nakes_1),
-                            petugas_nakes_2: normalizeField(row.petugas_nakes_2),
+                            petugas_nakes_1: normalizeField(row.ita_nakes_1 || row.petugas_nakes_1),
+                            petugas_nakes_2: normalizeField(row.ita_nakes_2 || row.petugas_nakes_2),
                             kondisi_kritis: parseJSON(row.kondisi_kritis, []),
                             jalan_napas: parseJSON(row.jalan_napas, []),
                             pernafasan: parseJSON(row.pernafasan, []),
@@ -465,7 +465,21 @@ export default function Form_CM_DOA(props) {
             {""}
             {/* SIHIR CSS KERTAS A4 & ZOOM PRINT */}
             {""}
-            <style>{` @media print { @page { size: A4 portrait; margin: 0mm !important; } body, html { margin: 0 !important; padding: 0 !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .print-container { width: 1050px !important; max-width: 1050px !important; zoom: 0.45 !important; padding: 2mm 5mm !important; margin: 0 auto !important; box-shadow: none !important; border: none !important; } } `}</style>
+          <style>{` 
+            @media print { 
+            @page { size: A4 portrait; margin: 0mm !important; } 
+            body, html { margin: 0 !important; padding: 0 !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+            .kertas-a4 { /* Diubah dari .print-container menjadi .kertas-a4 */
+                width: 1050px !important; 
+                max-width: 1050px !important; 
+                zoom: 0.5 !important; 
+                padding: 2mm 5mm !important; 
+                margin: 0 auto !important; 
+                box-shadow: none !important; 
+                border: none !important; 
+                } 
+            } 
+            `}</style>
             {""}
             {/* TOMBOL-TOMBOL MELAYANG DI ATAS MEJA ABU-ABU */}
             {""}

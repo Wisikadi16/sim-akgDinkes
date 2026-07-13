@@ -209,9 +209,11 @@ export default function Identitas_Tim(props) {
     console.log("get data tim ambulan")
     console.log(get_data)
 
-    return (
+   return (
     <>
-        <div className="ml-3 mr-3 mb-3 border-solid border border-black p-2 bg-gray-50 flex flex-wrap gap-x-4 gap-y-2 items-center text-xs md:text-sm print:border-none print:p-0 print:bg-transparent">
+        {/* Pembungkus diubah menjadi flex-col agar menurun. 
+            Border dan margin luar dihapus karena sudah disediakan oleh kotak parent di Form utamanya. */}
+        <div className="flex flex-col gap-y-1 w-full text-xs md:text-sm print:p-0 print:bg-transparent">
             {/* DATALIST GABUNGAN (PASTI MUNCUL) */}
             <datalist id="dl_tim_nakes">
                 {get_semua_tim_perawat.map((opts,i)=><option key={'p'+i} value={opts.nama}>{opts.nama} (Perawat)</option>)}
@@ -219,103 +221,123 @@ export default function Identitas_Tim(props) {
                 {get_semua_tim_nakes.map((opts,i)=><option key={'n'+i} value={opts.nama}>{opts.nama}</option>)}
             </datalist>
 
-            <div className="flex items-center flex-1 min-w-[140px]">
-                <span className="font-bold mr-2 whitespace-nowrap">Tim:</span>
-                {
-                    props.isPrinting == false ?
-                    <div className="flex-1">
-                        <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
-                            type="text"
-                            name="tim"
-                            value={get_data.tim}
-                            list="dl_tim_ambulan"
-                            onChange={handleChange} 
-                        />
-                        <datalist id="dl_tim_ambulan">
-                            {get_semua_tim_ambulan.map((opts,i)=><option key={i} id={opts.id} value={opts.nama_tim}>{opts.nama_tim}</option>)}
-                        </datalist>
-                    </div>
-                    :
-                    <div className="flex-1 font-bold border-b border-dotted border-black">{get_data.tim || "\u00A0"}</div>
-                }
+            {/* TIM */}
+            <div className="flex w-full">
+                <div className="w-[35%] font-bold">Tim</div>
+                <div className="w-[65%] flex">
+                    <span className="mr-1">:</span>
+                    {
+                        props.isPrinting == false ?
+                        <div className="flex-1">
+                            <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
+                                type="text"
+                                name="tim"
+                                value={get_data.tim}
+                                list="dl_tim_ambulan"
+                                onChange={handleChange} 
+                            />
+                            <datalist id="dl_tim_ambulan">
+                                {get_semua_tim_ambulan.map((opts,i)=><option key={i} id={opts.id} value={opts.nama_tim}>{opts.nama_tim}</option>)}
+                            </datalist>
+                        </div>
+                        :
+                        <div className="flex-1">{get_data.tim || ""}</div>
+                    }
+                </div>
             </div>
             
-            <div className="flex items-center flex-1 min-w-[140px]">
-                <span className="font-bold mr-2 whitespace-nowrap">Dokter:</span>
-                {
-                    props.isPrinting == false ?
-                    <div className="flex-1">
-                        <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
-                            type="text"
-                            name="dokter"
-                            value={get_data.dokter}
-                            list="dl_tim_dokter"
-                            onChange={handleChange} 
-                        />
-                        <datalist id="dl_tim_dokter">
-                            {get_semua_tim_dokter.map((opts,i)=><option key={i} id={opts.id} value={opts.nama}>{opts.nama}</option>)}
-                        </datalist>
-                    </div>
-                    :
-                    <div className="flex-1 font-bold border-b border-dotted border-black">{get_data.dokter || "\u00A0"}</div>
-                }
+            {/* DOKTER */}
+            <div className="flex w-full">
+                <div className="w-[35%] font-bold">Dokter</div>
+                <div className="w-[65%] flex">
+                    <span className="mr-1">:</span>
+                    {
+                        props.isPrinting == false ?
+                        <div className="flex-1">
+                            <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
+                                type="text"
+                                name="dokter"
+                                value={get_data.dokter}
+                                list="dl_tim_dokter"
+                                onChange={handleChange} 
+                            />
+                            <datalist id="dl_tim_dokter">
+                                {get_semua_tim_dokter.map((opts,i)=><option key={i} id={opts.id} value={opts.nama}>{opts.nama}</option>)}
+                            </datalist>
+                        </div>
+                        :
+                        <div className="flex-1">{get_data.dokter || ""}</div>
+                    }
+                </div>
             </div>
             
-            <div className="flex items-center flex-1 min-w-[140px]">
-                <span className="font-bold mr-2 whitespace-nowrap">Nakes 1:</span>
-                {
-                    props.isPrinting == false ?
-                    <div className="flex-1">
-                        <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
-                            type="text"
-                            name="nakes_1" 
-                            value={get_data.nakes_1} 
-                            list="dl_tim_nakes" 
-                            onChange={handleChange} 
-                        />
-                    </div>
-                    :
-                    <div className="flex-1 font-bold border-b border-dotted border-black">{get_data.nakes_1 || "\u00A0"}</div>
-                }
+            {/* NAKES 1 (Bisa diubah teksnya jadi "Perawat" jika ingin sama persis dengan PDF) */}
+            <div className="flex w-full">
+                <div className="w-[35%] font-bold">Nakes 1</div>
+                <div className="w-[65%] flex">
+                    <span className="mr-1">:</span>
+                    {
+                        props.isPrinting == false ?
+                        <div className="flex-1">
+                            <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
+                                type="text"
+                                name="nakes_1" 
+                                value={get_data.nakes_1} 
+                                list="dl_tim_nakes" 
+                                onChange={handleChange} 
+                            />
+                        </div>
+                        :
+                        <div className="flex-1">{get_data.nakes_1 || ""}</div>
+                    }
+                </div>
             </div>
             
-            <div className="flex items-center flex-1 min-w-[140px]">
-                <span className="font-bold mr-2 whitespace-nowrap">Nakes 2:</span>
-                {
-                    props.isPrinting == false ?
-                    <div className="flex-1">
-                        <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
-                            type="text"
-                            name="nakes_2" 
-                            value={get_data.nakes_2} 
-                            onChange={handleChange}
-                            list="dl_tim_nakes" 
-                        />
-                    </div>
-                    :
-                    <div className="flex-1 font-bold border-b border-dotted border-black">{get_data.nakes_2 || "\u00A0"}</div>
-                }
+            {/* NAKES 2 (Bisa diubah teksnya jadi "Bidan" jika ingin sama persis dengan PDF) */}
+            <div className="flex w-full">
+                <div className="w-[35%] font-bold">Nakes 2</div>
+                <div className="w-[65%] flex">
+                    <span className="mr-1">:</span>
+                    {
+                        props.isPrinting == false ?
+                        <div className="flex-1">
+                            <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
+                                type="text"
+                                name="nakes_2" 
+                                value={get_data.nakes_2} 
+                                onChange={handleChange}
+                                list="dl_tim_nakes" 
+                            />
+                        </div>
+                        :
+                        <div className="flex-1">{get_data.nakes_2 || ""}</div>
+                    }
+                </div>
             </div>
             
-            <div className="flex items-center flex-1 min-w-[140px]">
-                <span className="font-bold mr-2 whitespace-nowrap">Driver:</span>
-                {
-                    props.isPrinting == false ?
-                    <div className="flex-1">
-                        <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
-                            type="text"
-                            name="driver"
-                            value={get_data.driver}
-                            onChange={handleChange}
-                            list="dl_tim_driver" 
-                        />
-                        <datalist id="dl_tim_driver">
-                            {get_semua_tim_driver.map((opts,i)=><option key={i} id={opts.id} value={opts.nama}>{opts.nama}</option>)}
-                        </datalist>
-                    </div>
-                    :
-                    <div className="flex-1 font-bold border-b border-dotted border-black">{get_data.driver || "\u00A0"}</div>
-                }
+            {/* DRIVER */}
+            <div className="flex w-full">
+                <div className="w-[35%] font-bold">Driver</div>
+                <div className="w-[65%] flex">
+                    <span className="mr-1">:</span>
+                    {
+                        props.isPrinting == false ?
+                        <div className="flex-1">
+                            <input className="w-full border-b border-gray-400 bg-transparent focus:ring-0 p-0 text-xs md:text-sm outline-none"
+                                type="text"
+                                name="driver"
+                                value={get_data.driver}
+                                onChange={handleChange}
+                                list="dl_tim_driver" 
+                            />
+                            <datalist id="dl_tim_driver">
+                                {get_semua_tim_driver.map((opts,i)=><option key={i} id={opts.id} value={opts.nama}>{opts.nama}</option>)}
+                            </datalist>
+                        </div>
+                        :
+                        <div className="flex-1">{get_data.driver || ""}</div>
+                    }
+                </div>
             </div>
         </div>
     </>

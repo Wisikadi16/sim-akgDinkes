@@ -404,8 +404,9 @@ export default function Tim_Ambulan() {
         return matchingStatus ? matchingStatus.warna : '#FFFFFF'; // Default to white if no match
     };
 
-    const createCustomIcon = (imageUrl, warna) =>
-        new L.divIcon({
+    function createCustomIcon(url, warna) {
+        const imageUrl = url.startsWith('http') ? url : window.location.origin + '/' + url;
+        return new L.divIcon({
             className: 'custom-marker',
             iconSize: [30, 30],
             iconAnchor: [15, 30],
@@ -418,6 +419,7 @@ export default function Tim_Ambulan() {
                         <div class="w-[15px] h-[15px] rounded-full bg-[${warna}]"></div>
                     </div>`,
         });
+    }
 
     function x() {
         set_modal(false)

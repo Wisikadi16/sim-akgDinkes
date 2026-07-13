@@ -749,8 +749,8 @@ export default function Form_Neonatal(props) {
                 ita_id_tim: identitas_tim_ambulance.id,
                 ita_tim: identitas_tim_ambulance.tim,
                 ita_dokter: identitas_tim_ambulance.dokter,
-                ita_nakes1: identitas_tim_ambulance.nakes1,
-                ita_nakes2: identitas_tim_ambulance.nakes2,
+                ita_nakes_1: identitas_tim_ambulance.nakes_1,
+                ita_nakes_2: identitas_tim_ambulance.nakes_2,
                 ita_perawat: identitas_tim_ambulance.perawat,
                 ita_bidan: identitas_tim_ambulance.bidan,
                 ita_driver: identitas_tim_ambulance.driver,
@@ -884,6 +884,23 @@ export default function Form_Neonatal(props) {
     return (
         <div className="min-h-screen bg-slate-200 py-10 print:bg-white print:py-0 w-full font-sans text-black">
             <ToastContainer />
+            <style dangerouslySetInnerHTML={{__html: `
+            @media print {
+            @page { size: A4 portrait; margin: 5mm !important; }
+            body, html { margin: 0 !important; padding: 0 !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .kertas-a4 {
+                width: 1050px !important;
+                max-width: 1050px !important;
+                zoom: 0.75!important; 
+                padding: 0 !important;
+                margin: 0 auto !important;
+                box-shadow: none !important;
+                border: none !important;
+                page-break-inside: avoid;
+            }
+            .print\\:hidden { display: none !important; }
+            }
+            `}} />
             {/* --- TOMBOL ATAS --- */}
             <div className="flex justify-center print:hidden">
                 <a
@@ -895,7 +912,7 @@ export default function Form_Neonatal(props) {
             </div>
             <div
                 ref={c_print_ref}
-                className="kertas-a4 mx-auto bg-white shadow-2xl overflow-hidden w-full md:w-full print:w-[1000px] print:max-w-[1000px] min-h-[1414px] p-4 md:p-10 print:shadow-none print:p-0 text-black"
+                className="kertas-a4 mx-auto bg-white shadow-2xl overflow-hidden w-full md:w-full print:w-full print:max-w-full p-4 md:p-10 print:shadow-none print:p-0 text-black"
             >
                 <div className="grid grid-cols-2 text-xs md:text-sm sm:text-xs">
                     <HeaderLogo />
@@ -1661,18 +1678,18 @@ export default function Form_Neonatal(props) {
                             <div>Anamnesis :</div>
                             <div>
                                 {isPrinting == false && (
-                                    <textarea
-                                        className="w-full h-[181px]"
-                                        onChange={(e) =>
-                                            set_kronologi_anamnesis(
-                                                e.target.value,
-                                            )
-                                        }
-                                        value={kronologi_anamnesis}
-                                    ></textarea>
-                                )}
-                                {isPrinting && <div>{kronologi_anamnesis}</div>}
-                            </div>
+                                        <textarea
+                                            className="w-full h-[181px] print:min-h-[250px]"
+                                            onChange={(e) =>
+                                                set_kronologi_anamnesis(
+                                                    e.target.value,
+                                                )
+                                            }
+                                            value={kronologi_anamnesis}
+                                        ></textarea>
+                                    )}
+                                {isPrinting && <div className="print:min-h-[250px]">{kronologi_anamnesis}</div>}
+                           </div>
                         </div>
                     </div>
                     <div className="flex justify-center font-bold text-sm mt-3 border-2">
@@ -2941,7 +2958,7 @@ export default function Form_Neonatal(props) {
                                     )}
                                 </div>
 
-                                <div className="relative">
+                               <div className="relative">
                                     {isPrinting === false && (
                                         <button type="button" onClick={oc_hapus_ttd_petugas_rs_keluarga_pasien} className="absolute top-0 right-0 text-red-500 font-bold px-2 py-1 text-lg z-10" title="Hapus Tanda Tangan">X</button>
                                     )}

@@ -4,6 +4,7 @@ import { router } from "@inertiajs/react";
 import { Head, Link, useForm } from "@inertiajs/react";
 
 import HeaderForm from "@/Components/Headers/HeaderForm";
+import HeaderLogo from "@/Components/Headers/HeaderLogo";
 import Identitas_Tim from "@/Components/Form/Identitas_Tim";
 import Tanda_Vital from "@/Components/Form/Tanda_Vital";
 
@@ -18,6 +19,312 @@ import SignatureCanvas from "react-signature-canvas";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+// ============================================================
+// PRINT TEMPLATE — layout tabel murni, khusus dicetak.
+// Tidak ada <input>/<textarea>/<select> di sini, semua teks statis.
+// ============================================================
+const CB = (arr, val) => (Array.isArray(arr) && arr.includes(val) ? "☑" : "☐");
+const td = "border border-black p-1 align-top";
+
+const PrintTemplate = React.forwardRef(({ d, sigAmbulanceImg, sigKeluargaImg, sigAnatomiImg }, ref) => {
+    const identitas = d.identitas_pasien || {};
+    const tim = d.identitas_tim_ambulance || {};
+    const tv = d.tanda_vital || {};
+    const ds = d.disabilitas || {};
+    const rk = d.riwayat_kesehatan || {};
+    const pf = d.pemeriksaan_fisik || {};
+    const ftv = d.follow_up_tanda_vital || {};
+    const rsr = d.rumah_sakit_rujukan || {};
+
+    return (
+        <div ref={ref} className="hidden print:block bg-white text-black p-4 text-[11px] font-sans leading-tight">
+            {/* NOMOR NIK - kotak kecil pojok kanan atas */}
+            <div className="w-full flex justify-end">
+                <div className="border border-black px-2 py-0.5 text-xs mb-0.5">{identitas.nik}</div>
+            </div>
+
+            {/* KOP SURAT */}
+            <table className="w-full border-collapse mb-1">
+                <tbody>
+                    <tr>
+                        <td className="align-top border-b-2 border-black pb-1" colSpan={2}>
+                            <div className="flex items-center gap-2">
+                                <HeaderLogo />
+                            </div>
+                            <div className="text-[9px] mt-1">
+                                Jalan Pandanaran No.79 Kota Semarang. Telp. (024) 8415269 &ndash; 8318070 Fax. (024) 8318771
+                                <br />
+                                Call Center. 112 / 119 / 1500-132
+                            </div>
+                        </td>
+                        <td className="w-56 align-top border-b-2 border-black pb-1 pl-2">
+                            <table className="w-full border-collapse border border-black">
+                                <tbody>
+                                    <tr>
+                                        <td className="border border-black p-0.5 font-bold w-20">Nama Pasien</td>
+                                        <td className="border border-black p-0.5">: {identitas.nama_pasien}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-black p-0.5 font-bold">Tgl Lahir/Umur</td>
+                                        <td className="border border-black p-0.5">: {identitas.tgl_lahir} {identitas.umur ? `/ ${identitas.umur}` : ""}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-black p-0.5 font-bold">Alamat</td>
+                                        <td className="border border-black p-0.5">: {identitas.alamat} {identitas.alamat_kelurahan} {identitas.alamat_kecamatan}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-black p-0.5 font-bold">No. Telepon</td>
+                                        <td className="border border-black p-0.5">: {identitas.no_telepon}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table className="w-full border-collapse border-2 border-black mb-1">
+                <tbody>
+                    <tr>
+                        <td className="border border-black text-center font-bold py-0.5">ASESMEN GAWAT DARURAT</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* TIM + TANDA VITAL (kolom kiri, menyatu) | SURVEI PRIMER + DISABILITAS/EKSPOSUR/KESIMPULAN (kanan) */}
+            <table className="w-full border-collapse border border-black mb-1">
+                <tbody>
+                    <tr>
+                        <td className="border border-black p-1 w-32 align-top" rowSpan={2}>
+                            <table className="w-full">
+                                <tbody>
+                                    <tr><td className="font-bold pb-1">Tim :</td></tr>
+                                    <tr><td>Dokter : {tim.dokter}</td></tr>
+                                    <tr><td>Nakes 1 : {tim.nakes_1}</td></tr>
+                                    <tr><td>Nakes 2 : {tim.nakes_2}</td></tr>
+                                    <tr><td>Driver : {tim.driver}</td></tr>
+                                </tbody>
+                            </table>
+                            <div className="font-bold border-t border-black mt-1 pt-1">TANDA VITAL</div>
+                            <div>TD : {tv.td} mmHg</div>
+                            <div>HR : {tv.hr} x/menit</div>
+                            <div>RR : {tv.rr} x/menit</div>
+                            <div>SH : {tv.sh} &deg;C</div>
+                            <div>SpO2 : {tv.spo2} %</div>
+                            <div>Skala Nyeri : {tv.skala_nyeri}</div>
+                            <div>Pukul : {tv.pukul} WIB</div>
+                        </td>
+                        <td className="border border-black p-0 align-top">
+                            <div className="text-center font-bold border-b border-black py-0.5">I. SURVEI PRIMER</div>
+                            <table className="w-full border-collapse">
+                                <tbody>
+                                    <tr>
+                                        <td className={td + " w-1/4"}>
+                                            <div className="font-bold mb-0.5">KONDISI KRITIS</div>
+                                            <div>{CB(d.kondisi_kritis, "apneu")} Apneu</div>
+                                            <div>{CB(d.kondisi_kritis, "hanya_merespon_nyeri")} Hanya Merespon Nyeri</div>
+                                            <div>{CB(d.kondisi_kritis, "distress_respirasi_berat")} Distress Respirasi Berat</div>
+                                            <div>{CB(d.kondisi_kritis, "nadi_tidak_teraba_/_syok")} Nadi Tidak Teraba / Syok</div>
+                                            <div>{CB(d.kondisi_kritis, "sp02<90%")} SpO2 &lt;90%</div>
+                                            <div>{CB(d.kondisi_kritis, "kejang")} Kejang (sedang berlangsung)</div>
+                                            <div>{CB(d.kondisi_kritis, "tidak_ada")} Tidak Ada</div>
+                                        </td>
+                                        <td className={td + " w-1/4"}>
+                                            <div className="font-bold mb-0.5">JALAN NAFAS</div>
+                                            <div>{CB(d.jalan_nafas, "paten")} Paten</div>
+                                            <div>{CB(d.jalan_nafas, "obstruksi")} Obstruksi</div>
+                                            <div>{CB(d.jalan_nafas, "stridor")} Stridor</div>
+                                            <div>{CB(d.jalan_nafas, "gurgling")} Gurgling</div>
+                                            <div>{CB(d.jalan_nafas, "snoring")} Snoring</div>
+                                        </td>
+                                        <td className={td + " w-1/4"}>
+                                            <div className="font-bold mb-0.5">PERNAFASAN</div>
+                                            <div>{CB(d.pernafasan, "spontan")} Spontan</div>
+                                            <div>{CB(d.pernafasan, "apneu")} Apneu</div>
+                                            <div>{CB(d.pernafasan, "sianosis")} Sianosis</div>
+                                            <div>{CB(d.pernafasan, "retraksi_otot")} Retraksi Otot</div>
+                                            <div>{CB(d.pernafasan, "nasal_flare")} Nasal Flare</div>
+                                        </td>
+                                        <td className={td + " w-1/4"}>
+                                            <div className="font-bold mb-0.5">SIRKULASI</div>
+                                            <div className="font-semibold">Nadi</div>
+                                            <div>{CB(d.sirkulasi_nadi, "kuat")} Kuat &nbsp; {CB(d.sirkulasi_nadi, "lemah")} Lemah</div>
+                                            <div>{CB(d.sirkulasi_nadi, "tak_teraba")} Tak Teraba</div>
+                                            <div className="font-semibold mt-1">Kulit</div>
+                                            <div>{CB(d.sirkulasi_kulit, "normal")} Normal &nbsp; {CB(d.sirkulasi_kulit, "pucat")} Pucat</div>
+                                            <div>{CB(d.sirkulasi_kulit, "sianosis")} Sianosis</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td className="border border-black p-0 align-top">
+                            <table className="w-full border-collapse">
+                                <tbody>
+                                    <tr>
+                                        <td className={td + " w-1/3"}>
+                                            <div className="font-bold mb-0.5">DISABILITAS</div>
+                                            <div>GCS : E {ds.gcs_e} M {ds.gcs_m} V {ds.gcs_v}</div>
+                                            <div>Pupil : {ds.pupil}</div>
+                                            <div>Reflek Cahaya : {ds.reflek_cahaya}</div>
+                                            <div>Lateralisasi : {ds.lateralisasi}</div>
+                                        </td>
+                                        <td className={td + " w-1/3"}>
+                                            <div className="font-bold mb-0.5">EKSPOSUR</div>
+                                            <div>{CB(d.eksposur, "dalam_batas_normal")} Dalam batas normal</div>
+                                            <div>{CB(d.eksposur, "luka")} Luka</div>
+                                            <div>{CB(d.eksposur, "deformitas")} Deformitas</div>
+                                            <div>{CB(d.eksposur, "pendarahan")} Perdarahan</div>
+                                            <div>{CB(d.eksposur, "nyeri_tekan")} Nyeri Tekan</div>
+                                            <div>{CB(d.eksposur, "pembengkakan")} Pembengkakan</div>
+                                        </td>
+                                        <td className={td + " w-1/3"}>
+                                            <div className="font-bold mb-0.5">KESIMPULAN AWAL</div>
+                                            <div>{CB(d.kesimpulan_awal, "mengancam_jiwa")} Mengancam Jiwa</div>
+                                            <div>{CB(d.kesimpulan_awal, "potensi_mengancam_jiwa")} Potensi Mengancam Jiwa</div>
+                                            <div>{CB(d.kesimpulan_awal, "tidak_mengancam_jiwa")} Tidak Mengancam Jiwa</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* RIWAYAT KESEHATAN */}
+            <table className="w-full border-collapse border border-black mb-1">
+                <tbody>
+                    <tr><td colSpan={2} className="border border-black text-center font-bold py-0.5">II. RIWAYAT KESEHATAN</td></tr>
+                    <tr>
+                        <td className={td + " w-1/5 font-semibold"}>Keluhan Utama</td>
+                        <td className={td}>{rk.keluhan_utama}</td>
+                    </tr>
+                    <tr>
+                        <td className={td + " font-semibold"}>Riwayat Penyakit Sekarang</td>
+                        <td className={td}>{rk.riwayat_penyakit_sekarang}</td>
+                    </tr>
+                    <tr>
+                        <td className={td + " font-semibold"}>Riwayat Penyakit Dahulu</td>
+                        <td className={td}>
+                            {CB(rk.riwayat_penyakit_dahulu, "Jantung")} Jantung &nbsp;
+                            {CB(rk.riwayat_penyakit_dahulu, "Hipertensi")} Hipertensi &nbsp;
+                            {CB(rk.riwayat_penyakit_dahulu, "DM")} DM &nbsp;
+                            {CB(rk.riwayat_penyakit_dahulu, "Epilepsi")} Epilepsi &nbsp;
+                            {CB(rk.riwayat_penyakit_dahulu, "Asma")} Asma &nbsp;
+                            {CB(rk.riwayat_penyakit_dahulu, "Kelainan Jiwa")} Kelainan Jiwa &nbsp;
+                            {CB(rk.riwayat_penyakit_dahulu, "Lainnya")} Lainnya: {(d.riwayat_penyakit_dahulu_lainnya || []).join(", ")}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td className={td + " font-semibold"}>Riwayat Penyakit Keluarga</td>
+                        <td className={td}>{rk.riwayat_penyakit_keluarga}</td>
+                    </tr>
+                    <tr>
+                        <td className={td + " font-semibold"}>Riwayat Minum Obat</td>
+                        <td className={td}>{rk.riwayat_minum_obat}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* PEMERIKSAAN FISIK DAN PENUNJANG */}
+            <table className="w-full border-collapse border border-black mb-1">
+                <tbody>
+                    <tr><td colSpan={2} className="border border-black text-center font-bold py-0.5">III. PEMERIKSAAN FISIK DAN PEMERIKSAAN PENUNJANG</td></tr>
+                    <tr>
+                        <td className={td + " w-40 text-center"}>
+                            <img src="/gambar/anatomi_tubuh.png" className="w-full" alt="Anatomi Tubuh" />
+                            {sigAnatomiImg && (
+                                <img src={sigAnatomiImg} className="w-full -mt-24" alt="Tanda lokasi kelainan" />
+                            )}
+                        </td>
+                        <td className={td}>
+                            <table className="w-full">
+                                <tbody>
+                                    <tr><td className="font-semibold w-24 align-top">Kepala</td><td>: Normocephal ({pf.normocephal}), Sclera Ikterik ({pf.sclera_ikterik_1}/{pf.sclera_ikterik_2}), Conj. Anemis ({pf.conj_anemis_1}/{pf.conj_anemis_2})</td></tr>
+                                    <tr><td className="font-semibold align-top">Leher</td><td>: Pembesaran KGB ({pf.perbesaran_kelenjar_getah_bening}), Deviasi Trachea ({pf.deviasi_trachea})</td></tr>
+                                    <tr><td className="font-semibold align-top">Thorax</td><td>: Suara Dasar Vesikuler ({pf.suara_dasar_veikuler_1}/{pf.suara_dasar_veikuler_2}), Rhonki ({pf.rhonki_1}/{pf.rhonki_2}), Wheezing ({pf.wheezing_1}/{pf.wheezing_2})<br />Bunyi Jantung 1 dan 2 ({pf.bunyi_jantung_1_2}) {pf.bunyi_jantung_1_2_status}</td></tr>
+                                    <tr><td className="font-semibold align-top">Abdomen</td><td>: Bising Usus ({pf.bising_usus}) {pf.bising_usus_status}<br />Nyeri Tekan Abdomen ({pf.nyeri_tekan_abdomen}) pada Area: {pf.nyeri_tekan_abdomen_area}</td></tr>
+                                    <tr><td className="font-semibold align-top">Ekstremitas</td><td>: Akral Hangat {pf.akral_hangat_a_1}/{pf.akral_hangat_a_2} &mdash; {pf.akral_hangat_b_1}/{pf.akral_hangat_b_2} &nbsp;&nbsp; Oedema {pf.oedema_a_1}/{pf.oedema_a_2} &mdash; {pf.oedema_b_1}/{pf.oedema_b_2}</td></tr>
+                                    <tr><td className="font-semibold align-top">Penunjang</td><td>: EKG: {pf.ekg} &nbsp; GDS ({pf.gds}), AU ({pf.au}), CHOL ({pf.chol}), HB ({pf.hb})</td></tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* DIAGNOSIS / TERAPI / FOLLOW UP */}
+            <table className="w-full border-collapse border border-black mb-1">
+                <tbody>
+                    <tr>
+                        <td className={td + " w-1/3"}>
+                            <div className="font-bold text-center border-b border-black pb-0.5 mb-0.5">IV. DIAGNOSIS MEDIS</div>
+                            {[0, 1, 2, 3, 4].map((i) => (
+                                <div key={i}>{i + 1}. {(d.diagnosis_medis || [])[i] || ""}</div>
+                            ))}
+                        </td>
+                        <td className={td + " w-1/3"}>
+                            <div className="font-bold text-center border-b border-black pb-0.5 mb-0.5">V. TERAPI/TINDAKAN/KONSUL : dr. {d.terapi_tindakan_konsul_dr}</div>
+                            {(d.terapi_tindakan_konsul || []).map((t, i) => (
+                                <div key={i}>- {t}</div>
+                            ))}
+                        </td>
+                        <td className={td + " w-1/3"}>
+                            <div className="font-bold text-center border-b border-black pb-0.5 mb-0.5">FOLLOW UP TANDA VITAL</div>
+                            <div>TD : {ftv.td} mmHg</div>
+                            <div>HR : {ftv.hr} x/menit</div>
+                            <div>RR : {ftv.rr} x/menit</div>
+                            <div>SH : {ftv.sh} &deg;C</div>
+                            <div>SpO2 : {ftv.spo2} %</div>
+                            <div>Skala Nyeri : {ftv.skala_nyeri}</div>
+                            <div>Pukul : {ftv.pukul} WIB</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* RUMAH SAKIT RUJUKAN + TANDA TANGAN */}
+            <table className="w-full border-collapse border border-black">
+                <tbody>
+                    <tr>
+                        <td className={td + " w-1/5"}>
+                            <div className="font-bold mb-0.5">RUMAH SAKIT RUJUKAN</div>
+                            <div>RS : {rsr.rs}</div>
+                            <div>Tanggal : {rsr.tgl_baru}</div>
+                            <div>Jam : {rsr.jam}</div>
+                        </td>
+                        <td className={td + " w-[35%] text-center"}>
+                            <div>Petugas Ambulance Hebat,</div>
+                            {sigAmbulanceImg ? (
+                                <img src={sigAmbulanceImg} className="h-16 mx-auto" alt="TTD Petugas Ambulance" />
+                            ) : (
+                                <div className="h-16" />
+                            )}
+                            <div className="font-bold underline">{d.nama_ttd_petugas_ambulance}</div>
+                        </td>
+                        <td className={td + " w-[35%] text-center"}>
+                            <div>{d.keluarga_pasien_petugas_rs || "Keluarga Pasien / Petugas RS"},</div>
+                            {sigKeluargaImg ? (
+                                <img src={sigKeluargaImg} className="h-16 mx-auto" alt="TTD Keluarga/Petugas RS" />
+                            ) : (
+                                <div className="h-16" />
+                            )}
+                            <div className="font-bold underline">{d.nama_ttd_keluarga_pasien_petugas_rs}</div>
+                        </td>
+                        <td className={td + " text-center align-middle font-bold"}>
+                            PSC<br />119
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    );
+});
+PrintTemplate.displayName = "PrintTemplate";
 
 export default function Form_Umum({ auth, id }) {
     const [id_form, set_id_form] = useState(null);
@@ -606,9 +913,7 @@ export default function Form_Umum({ auth, id }) {
     const getData_TandaVital = (data) => {
         // console.log("tanda vital")
         // console.log(data)
-        useEffect(() => {
-            set_data_tanda_vital(data);
-        });
+        set_data_tanda_vital(data);
 
         // console.log("td_form:"+data.td)
     };
@@ -998,9 +1303,7 @@ export default function Form_Umum({ auth, id }) {
 
     const getData_FollowUpTandaVital = (data) => {
         // console.log("nama_form_follow_up")
-        useEffect(() => {
-            set_data_follow_up_tanda_vital(data);
-        });
+        set_data_follow_up_tanda_vital(data);
 
         // console.log("td_form:"+data.td)
     };
@@ -1582,7 +1885,12 @@ export default function Form_Umum({ auth, id }) {
 
     // const c_print_ref = useRef();
     const c_print_ref = useRef(null);
+    const printTemplateRef = useRef(null);
     const promiseResolveRef = useRef(null);
+
+    const [sigAmbulanceImg, setSigAmbulanceImg] = useState(null);
+    const [sigKeluargaImg, setSigKeluargaImg] = useState(null);
+    const [sigAnatomiImg, setSigAnatomiImg] = useState(null);
 
     useEffect(() => {
         if (isPrinting && promiseResolveRef.current) {
@@ -1591,13 +1899,27 @@ export default function Form_Umum({ auth, id }) {
     }, [isPrinting]);
 
     const oc_print = useReactToPrint({
-        content: () => c_print_ref.current,
+        content: () => printTemplateRef.current,
         // documentTitle: 'emp-data',
-        // onBeforeGetContent: () => {
-        //       setIsPrinting(true);
-        // },
         onBeforeGetContent: () => {
             return new Promise((resolve) => {
+                // Ambil gambar tanda tangan & anatomi dari canvas sebelum dicetak,
+                // supaya tidak hilang di hasil print (lihat refactoring.md Aturan 3).
+                if (ref_ttd_petugas_ambulance.current && !ref_ttd_petugas_ambulance.current.isEmpty()) {
+                    setSigAmbulanceImg(ref_ttd_petugas_ambulance.current.getCanvas().toDataURL("image/png"));
+                } else {
+                    setSigAmbulanceImg(null);
+                }
+                if (ref_ttd_keluarga_pasien_petugas_rs.current && !ref_ttd_keluarga_pasien_petugas_rs.current.isEmpty()) {
+                    setSigKeluargaImg(ref_ttd_keluarga_pasien_petugas_rs.current.getCanvas().toDataURL("image/png"));
+                } else {
+                    setSigKeluargaImg(null);
+                }
+                if (ref_anatomi_tubuh.current && !ref_anatomi_tubuh.current.isEmpty()) {
+                    setSigAnatomiImg(ref_anatomi_tubuh.current.getCanvas().toDataURL("image/png"));
+                } else {
+                    setSigAnatomiImg(null);
+                }
                 promiseResolveRef.current = resolve;
                 setIsPrinting(true);
             });
@@ -1605,11 +1927,41 @@ export default function Form_Umum({ auth, id }) {
         onAfterPrint: () => setIsPrinting(false),
     });
 
+    // Kumpulan data untuk PrintTemplate (dibungkus jadi satu objek supaya rapi)
+    const printData = {
+        identitas_pasien: get_identitas_pasien,
+        identitas_tim_ambulance: get_data_identitas_tim_ambulance,
+        kondisi_kritis: get_data_surv_prim_kondisi_kritis,
+        jalan_nafas: get_data_surv_prim_jalan_nafas,
+        pernafasan: get_data_surv_prim_pernafasan,
+        sirkulasi_nadi: get_data_surv_prim_sirkulasi_nadi,
+        sirkulasi_kulit: get_data_surv_prim_sirkulasi_kulit,
+        tanda_vital: get_data_tanda_vital,
+        disabilitas: get_data_surv_prim_disabilitas,
+        eksposur: get_data_surv_prim_eksposur,
+        kesimpulan_awal: get_data_surv_prim_kesimpulan_awal,
+        riwayat_kesehatan: {
+            ...get_data_surv_prim_riwayat_kesehatan,
+            riwayat_penyakit_dahulu: get_data_surv_prim_riwayat_penyakit_dahulu,
+        },
+        riwayat_penyakit_dahulu_lainnya: get_data_surv_prim_riwayat_penyakit_dahulu_lainnya,
+        pemeriksaan_fisik: get_data_pemeriksaan_fisik_dan_penunjang,
+        diagnosis_medis: get_data_diagnosis_medis,
+        terapi_tindakan_konsul: get_terapi_tindakan_konsul,
+        terapi_tindakan_konsul_dr: get_terapi_tindakan_konsul_dr,
+        follow_up_tanda_vital: get_data_follow_up_tanda_vital,
+        rumah_sakit_rujukan: get_data_rumah_sakit_rujukan,
+        keluarga_pasien_petugas_rs: get_data_keluarga_pasien_petugas_rs,
+        nama_ttd_petugas_ambulance: get_data_nama_ttd_petugas_ambulance_hebat,
+        nama_ttd_keluarga_pasien_petugas_rs: get_data_nama_ttd_keluarga_pasien_petugas_rs,
+    };
+
     console.log("keluraga petugas rs");
     console.log(get_data_keluarga_pasien_petugas_rs);
 
     return (
-        <div className="min-h-screen bg-slate-200 py-10 print:bg-white print:py-0 w-full font-sans text-black">
+        <>
+        <div className="min-h-screen bg-slate-200 py-10 print:hidden w-full font-sans text-black">
             <ToastContainer />
             <div className="flex justify-center">
                 <a
@@ -3165,15 +3517,13 @@ export default function Form_Umum({ auth, id }) {
                     </div>
 
                     {/* FOLLOW UP VITAL */}
-                    <div className="w-1/3 shrink-0 flex flex-col bg-gray-50 text-[10px] md:text-[11px] overflow-hidden justify-start p-1 relative">
-                        <div className="absolute inset-0 overflow-y-auto w-full h-full custom-scrollbar-hide">
-                            <Tanda_Vital
-                                judul="FOLLOW UP TANDA VITAL"
-                                onSubmit={getData_FollowUpTandaVital}
-                                isPrinting={isPrinting}
-                                id={id}
-                            />
-                        </div>
+                    <div className="w-1/3 shrink-0 flex flex-col bg-gray-50 text-[10px] md:text-[11px] justify-start p-1">
+                        <Tanda_Vital
+                            judul="FOLLOW UP TANDA VITAL"
+                            onSubmit={getData_FollowUpTandaVital}
+                            isPrinting={isPrinting}
+                            id={id}
+                        />
                     </div>
                 </div>
 
@@ -3374,5 +3724,13 @@ export default function Form_Umum({ auth, id }) {
                 </button>
             </div>
         </div>
+        <PrintTemplate
+            ref={printTemplateRef}
+            d={printData}
+            sigAmbulanceImg={sigAmbulanceImg}
+            sigKeluargaImg={sigKeluargaImg}
+            sigAnatomiImg={sigAnatomiImg}
+        />
+        </>
     );
 }

@@ -496,14 +496,14 @@ export default function Form_Maternal(props) {
                     .kertas-a4 {
                         width: 1050px !important;
                         max-width: 1050px !important;
-                        zoom: 0.65 !important; /* UBAH ANGKA INI (misal 0.60 atau 0.70) JIKA KURANG PAS */
+                        zoom: 0.65 !important; 
                         padding: 0 !important;
                         margin: 0 auto !important;
                         box-shadow: none !important;
                         border: none !important;
                     }
-                    .overflow-x-auto { overflow: hidden !important; }
-                }
+                        .overflow-x-auto { overflow: hidden !important; }
+                    }   
             `}</style>
             <div className="flex justify-center print:hidden">
                 <a
